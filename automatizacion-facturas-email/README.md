@@ -38,3 +38,9 @@ Sistema automático que:
 ## Decisiones clave
 - Separar detección, extracción y validación para evitar fallos en cascada
 - Mantener el sistema auditable y fácil de mantener
+
+## Arquitectura y decisiones técnicas
+- Pipeline modular: detección → extracción → validación → registro
+- Manejo de errores independiente por etapa
+- IA usada solo para extracción estructurada, no como fuente de verdad
+
