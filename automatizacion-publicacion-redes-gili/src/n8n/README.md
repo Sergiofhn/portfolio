@@ -16,7 +16,7 @@ El objetivo es **eliminar tareas manuales**, evitar errores de publicación y ga
 
 ---
 
-## 🎯 Qué problema resuelve
+## Qué problema resuelve
 
 ### Antes
 - Publicaciones manuales
@@ -32,7 +32,7 @@ El objetivo es **eliminar tareas manuales**, evitar errores de publicación y ga
 
 ---
 
-## 🧠 Flujo lógico (alto nivel)
+## Flujo lógico (alto nivel)
 
 1. Trigger programado  
 2. Lectura de Google Sheets  
@@ -48,15 +48,13 @@ El objetivo es **eliminar tareas manuales**, evitar errores de publicación y ga
 
 ---
 
-## 🧩 Desglose del flujo por bloques
+## Desglose del flujo por bloques
 
-### 1️⃣ Schedule Trigger
+### 1️ Schedule Trigger
 - Ejecuta el flujo de forma periódica
 - Controla cuándo se revisan posibles publicaciones
 
----
-
-### 2️⃣ Datos Generales (Google Sheets)
+### 2️ Datos Generales (Google Sheets)
 - Lee la hoja **ARCHIVOS**
 - Filtra solo filas con:
   - `Status = "Listo para publicar"`
@@ -71,9 +69,7 @@ Campos clave utilizados:
 - row_number  
 - fileId  
 
----
-
-### 3️⃣ Gate de publicación (media)
+### 3️ Gate de publicación (media)
 Nodo crítico de control.
 
 Valida:
@@ -83,25 +79,19 @@ Valida:
 
 Solo los ítems válidos continúan el flujo.
 
----
-
-### 4️⃣ Marcar fila como “En proceso”
+### 4️ Marcar fila como “En proceso”
 - Actualiza la fila en Google Sheets
 - Evita dobles publicaciones
 - Deja trazabilidad clara del estado intermedio
 
----
-
-### 5️⃣ Identificación y normalización de datos
+### 5️ Identificación y normalización de datos
 - Normaliza cliente, tipo y formato
 - Determina:
   - Plataforma destino
   - Perfil / cuenta de publicación
 - Prepara datos técnicos para los siguientes nodos
 
----
-
-### 6️⃣ Formateo de datos
+### 6️ Formateo de datos
 Estructura final de campos:
 - `caption`
 - `video_url`
@@ -111,26 +101,20 @@ Estructura final de campos:
 
 Datos listos para publicar sin lógica adicional aguas abajo.
 
----
-
-### 7️⃣ Descarga y conversión de vídeo
+### 7️ Descarga y conversión de vídeo
 - Descarga el archivo desde Google Drive
 - Llama a un microservicio de conversión (FFmpeg)
 - Optimiza el vídeo según la red social
 - Limpia binarios para evitar consumo innecesario de memoria
 
----
-
-### 8️⃣ Switch por tipo de contenido
+### 8️ Switch por tipo de contenido
 Decide automáticamente el camino según `Type`:
 
 - `video` → TikTok  
 - `reel` → Instagram Reels  
 - `image` → Instagram (preparado, actualmente desactivado)
 
----
-
-### 9️⃣ Publicación en la red social
+### 9️ Publicación en la red social
 - Uso de **UploadPost API**
 - Publicación o programación según configuración
 - Devuelve:
@@ -138,9 +122,7 @@ Decide automáticamente el camino según `Type`:
   - Metadatos técnicos
   - Estado de éxito o error
 
----
-
-### 🔟 Gestión de resultados (OK / ERROR)
+### 10 Gestión de resultados (OK / ERROR)
 
 #### ✅ Si todo va bien
 - Estado → `Publicado`
@@ -154,9 +136,7 @@ Decide automáticamente el camino según `Type`:
 - Envía mensaje detallado por Telegram
 - Mantiene trazabilidad completa del incidente
 
----
-
-## 📬 Notificaciones Telegram
+## Notificaciones Telegram
 
 Cada ejecución relevante genera un mensaje con:
 - Cliente
@@ -169,9 +149,7 @@ Cada ejecución relevante genera un mensaje con:
 
 Esto permite **monitorización sin necesidad de acceder a n8n**.
 
----
-
-## 🗂 Dependencias y servicios externos
+## Dependencias y servicios externos
 
 - n8n
 - Google Sheets
@@ -180,9 +158,7 @@ Esto permite **monitorización sin necesidad de acceder a n8n**.
 - Microservicio FFmpeg
 - Telegram Bot
 
----
-
-## 🧱 Estados posibles en Google Sheets
+## Estados posibles en Google Sheets
 
 | Estado              | Significado                     |
 |--------------------|---------------------------------|
@@ -191,9 +167,7 @@ Esto permite **monitorización sin necesidad de acceder a n8n**.
 | Publicado           | Publicación correcta             |
 | ERROR               | Fallo detectado                  |
 
----
-
-## 🚀 Escalabilidad
+## Escalabilidad
 
 El flujo está preparado para:
 - Múltiples clientes
@@ -201,9 +175,7 @@ El flujo está preparado para:
 - Nuevas plataformas (YouTube Shorts, LinkedIn, etc.)
 - Reglas horarias personalizadas
 
----
-
-## 🧠 Filosofía del sistema
+## Filosofía del sistema
 
 No es “automatizar por automatizar”.
 
