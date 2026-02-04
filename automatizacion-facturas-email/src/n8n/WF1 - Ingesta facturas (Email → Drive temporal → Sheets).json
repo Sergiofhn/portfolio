@@ -1,0 +1,579 @@
+{
+  "name": "WF1 - Ingesta facturas (Email → Drive temporal → Sheets)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "Label_1246200683439623004"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -96
+      ],
+      "id": "e0a5a148-bdc5-49e9-a1be-22e171fdeafe",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZyhfvL1yuXr3dyAN",
+          "name": "Jorcano Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        -96
+      ],
+      "id": "9f188dbf-d458-4612-9331-876629e2ee4c",
+      "name": "Get a message",
+      "webhookId": "971b59a0-525d-4fe1-90ab-68ce7809db67",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZyhfvL1yuXr3dyAN",
+          "name": "Jorcano Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "592f53ea-5f6f-4d54-ad68-3a7cfa98f193",
+              "leftValue": "=  {{ Object.keys($binary || {}).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "cb7717e6-5021-4bab-9c16-8c7bf70d4c8a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "const out = [];\n\nfor (const item of items) {\n  const bin = item.binary || {};\n  const json = item.json || {};\n\n  for (const [key, file] of Object.entries(bin)) {\n    out.push({\n      json: {\n        email_remitente: json.from || json.emailFrom || null,\n        email_asunto: json.subject || null,\n        email_message_id: json.messageId || json.id || null,\n        email_timestamp: json.date || json.internalDate || null,\n\n        nombre_adjunto_original: file.fileName || key,\n        mimeType: file.mimeType || null,\n        attachmentKey: key,\n      },\n      binary: {\n        data: file, // el adjunto se renombra a \"data\"\n      },\n    });\n  }\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        -224
+      ],
+      "id": "d19dcb8d-510f-4988-aa5c-daee998ba5e0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.nombre_adjunto_original }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1jmyILsZB4Z4Cm9oQyXjgVp9Wl-9WL0H2",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        928,
+        -224
+      ],
+      "id": "f7566a50-e639-4ae7-a5d1-3cd49c3b2b9d",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "T2Htb0jixNjjBRmt",
+          "name": "Google Drive account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "15RJYTntqzL7zKD8fFQGFwbjhiopjFPR3GZwAeuWcbVI"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1799858796,
+          "mode": "list",
+          "cachedResultName": "FACTURAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15RJYTntqzL7zKD8fFQGFwbjhiopjFPR3GZwAeuWcbVI/edit#gid=1799858796"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp_procesado": "={{$now.setZone('Europe/Madrid').toFormat(\"dd/MM/yyyy HH:mm:ss\")}}",
+            "ID_archivo_Drive": "={{$json.id}}",
+            "Enlace_archivo_Drive": "={{$json.webViewLink}}",
+            "Nombre_adjunto_original": "={{$json.name}}",
+            "Email_remitente": "={{ $('Code in JavaScript').item.json.email_remitente.value[0].address }}",
+            "Email_asunto": "={{ $('Code in JavaScript').item.json.email_asunto }}",
+            "Email_message_id": "={{ $('Get a message').item.json.id }}",
+            "Email_timestamp": "={{ $('Code in JavaScript').item.json.email_timestamp }}",
+            "Observaciones": "WF1 - Ingestado"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp_procesado",
+              "displayName": "Timestamp_procesado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo_factura",
+              "displayName": "Tipo_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hash_factura",
+              "displayName": "Hash_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Clave_proveedor",
+              "displayName": "Clave_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre_proveedor",
+              "displayName": "Nombre_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CIF_proveedor",
+              "displayName": "CIF_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Numero_factura",
+              "displayName": "Numero_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_factura",
+              "displayName": "Fecha_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Base_imponible",
+              "displayName": "Base_imponible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IVA_importe",
+              "displayName": "IVA_importe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total_factura",
+              "displayName": "Total_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Confianza_proveedor",
+              "displayName": "Confianza_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID_archivo_Drive",
+              "displayName": "ID_archivo_Drive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Enlace_archivo_Drive",
+              "displayName": "Enlace_archivo_Drive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre_adjunto_original",
+              "displayName": "Nombre_adjunto_original",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_remitente",
+              "displayName": "Email_remitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_asunto",
+              "displayName": "Email_asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_message_id",
+              "displayName": "Email_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_timestamp",
+              "displayName": "Email_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Observaciones",
+              "displayName": "Observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1136,
+        -224
+      ],
+      "id": "f4a61c1a-bf0e-43af-89db-eed2c8739b0f",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Get a message').item.json.id }}",
+        "labelIds": [
+          "Label_5707562400522219076"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        -224
+      ],
+      "id": "4e340df1-a6f5-4621-b842-3637d2618206",
+      "name": "Add label to message",
+      "webhookId": "1a1ff70c-4fd7-4da5-ad23-d53d43c72926",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZyhfvL1yuXr3dyAN",
+          "name": "Jorcano Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Get a message').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1552,
+        -224
+      ],
+      "id": "736b53a7-4045-4e9a-b8f3-7de6fd00932c",
+      "name": "Mark a message as read",
+      "webhookId": "1a1ff70c-4fd7-4da5-ad23-d53d43c72926",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZyhfvL1yuXr3dyAN",
+          "name": "Jorcano Gmail"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $('Get a message').item.json.id }}",
+        "labelIds": [
+          "INBOX",
+          "Label_1246200683439623004"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        -224
+      ],
+      "id": "eae4b7ef-afe6-4388-84ca-02c2ab791c3b",
+      "name": "Remove label from message",
+      "webhookId": "1a1ff70c-4fd7-4da5-ad23-d53d43c72926",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ZyhfvL1yuXr3dyAN",
+          "name": "Jorcano Gmail"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Mark a message as read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark a message as read": {
+      "main": [
+        [
+          {
+            "node": "Remove label from message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a9ab18ae-cfcf-4dff-9477-1410d62a986d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0"
+  },
+  "id": "1JhZ0apXrqAvfSBESbITh",
+  "tags": [
+    {
+      "updatedAt": "2025-12-03T16:38:09.818Z",
+      "createdAt": "2025-12-03T16:38:09.818Z",
+      "id": "8LAQQwNZWR5ovoSh",
+      "name": "extractor"
+    },
+    {
+      "updatedAt": "2026-01-09T11:09:41.418Z",
+      "createdAt": "2026-01-09T11:09:41.418Z",
+      "id": "QcVe8o2UrVN6eTEf",
+      "name": "Organizar"
+    },
+    {
+      "updatedAt": "2025-12-03T16:38:02.233Z",
+      "createdAt": "2025-12-03T16:38:02.233Z",
+      "id": "UaDQvmRokPaNdwHB",
+      "name": "facturas"
+    },
+    {
+      "updatedAt": "2026-01-09T11:09:47.577Z",
+      "createdAt": "2026-01-09T11:09:47.577Z",
+      "id": "hl1x0QldphRoU3py",
+      "name": "Cliente Eloi"
+    }
+  ]
+}

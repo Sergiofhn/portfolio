@@ -1,0 +1,1993 @@
+{
+  "name": "WF2 — “Procesado (Drive temporal → OCR → proveedor → mover → actualizar fila + Gmail)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "",
+        "height": 176,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -1296
+      ],
+      "id": "8657438a-eab6-46f9-b845-7f68ae76dee9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 176,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -1488
+      ],
+      "id": "981af7e7-3eb7-4770-8c96-3faed6430e7b",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2f85fd56-6a43-472e-b88f-57ec981709b2",
+              "leftValue": "={{ $json.mimeType === 'application/pdf' }}",
+              "rightValue": "pdf",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        96,
+        -1376
+      ],
+      "id": "4a06ee3c-d85d-42ac-bca1-5cac1b317602",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 176,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -1392
+      ],
+      "id": "06ec5def-3b2b-45a4-96f1-10e08b6d5bdf",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1jmyILsZB4Z4Cm9oQyXjgVp9Wl-9WL0H2",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -1376
+      ],
+      "id": "57af510d-41b3-4063-8fda-0850406b5436",
+      "name": "Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 176,
+        "width": 192,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -1392
+      ],
+      "id": "1e1b1b6c-ea94-4a29-8ba2-70cf16c0b3bf",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "15RJYTntqzL7zKD8fFQGFwbjhiopjFPR3GZwAeuWcbVI",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1799858796,
+          "mode": "list",
+          "cachedResultName": "FACTURAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15RJYTntqzL7zKD8fFQGFwbjhiopjFPR3GZwAeuWcbVI/edit#gid=1799858796"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID_archivo_Drive": "={{$node[\"Drive Trigger\"].json.id}}",
+            "Timestamp_procesado": "={{$now.setZone('Europe/Madrid').toFormat(\"dd/MM/yyyy HH:mm:ss\")}}",
+            "Tipo_factura": "ENTRANTE",
+            "Hash_factura": "={{$node[\"CODE - Normalizar y decidir\"].json.hash_factura}}",
+            "Clave_proveedor": "={{$node[\"CODE - Normalizar y decidir\"].json.clave_proveedor}}",
+            "Nombre_proveedor": "={{$node[\"CODE - Normalizar y decidir\"].json.nombre_proveedor}}",
+            "CIF_proveedor": "={{$node[\"CODE - Normalizar y decidir\"].json.cif_proveedor}}",
+            "Numero_factura": "={{$node[\"CODE - Normalizar y decidir\"].json.invoice_number}}",
+            "Fecha_factura": "={{$node[\"CODE - Normalizar y decidir\"].json.invoice_date}}",
+            "Base_imponible": "={{$node[\"CODE - Normalizar y decidir\"].json.base}}",
+            "IVA_importe": "={{$node[\"CODE - Normalizar y decidir\"].json.vat_amount}}",
+            "Total_factura": "={{$node[\"CODE - Normalizar y decidir\"].json.total}}",
+            "Estado": "={{$node[\"CODE - Normalizar y decidir\"].json.estado_final}}",
+            "Observaciones": "={{ $node[\"CODE - Normalizar y decidir\"].json.estado_final === \"REVISAR\"   ? \"Revisar: faltan datos o baja confianza\"   : \"\" }}"
+          },
+          "matchingColumns": [
+            "ID_archivo_Drive"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp_procesado",
+              "displayName": "Timestamp_procesado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo_factura",
+              "displayName": "Tipo_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hash_factura",
+              "displayName": "Hash_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Clave_proveedor",
+              "displayName": "Clave_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre_proveedor",
+              "displayName": "Nombre_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CIF_proveedor",
+              "displayName": "CIF_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Numero_factura",
+              "displayName": "Numero_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha_factura",
+              "displayName": "Fecha_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Base_imponible",
+              "displayName": "Base_imponible",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IVA_importe",
+              "displayName": "IVA_importe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total_factura",
+              "displayName": "Total_factura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Confianza_proveedor",
+              "displayName": "Confianza_proveedor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID_archivo_Drive",
+              "displayName": "ID_archivo_Drive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Enlace_archivo_Drive",
+              "displayName": "Enlace_archivo_Drive",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre_adjunto_original",
+              "displayName": "Nombre_adjunto_original",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_remitente",
+              "displayName": "Email_remitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_asunto",
+              "displayName": "Email_asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_message_id",
+              "displayName": "Email_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email_timestamp",
+              "displayName": "Email_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observaciones",
+              "displayName": "Observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        3584,
+        -1232
+      ],
+      "id": "3aad6865-d3eb-44e2-a116-8711f8005d61",
+      "name": "Sheets #1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function cleanVat(v) {\n  if (!v) return null;\n  let s = String(v).trim().toUpperCase();\n  s = s.replace(/^ES/, \"\");              // quita prefijo ES\n  s = s.replace(/[^A-Z0-9]/g, \"\");       // deja solo letras/números\n  return s || null;\n}\n\nfunction slug(s) {\n  return (s || \"\")\n    .normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\")\n    .replace(/[^a-zA-Z0-9]+/g, \" \")\n    .trim()\n    .replace(/\\s+/g, \" \")\n    .slice(0, 60);\n}\n\nfunction toNumber(n) {\n  if (n === null || n === undefined || n === \"\") return null;\n  if (typeof n === \"number\") return n;\n  const s = String(n).replace(/\\./g, \"\").replace(\",\", \".\"); // por si viniera con coma\n  const v = Number(s);\n  return Number.isFinite(v) ? v : null;\n}\n\nfunction pickFirstMatch(text, regex) {\n  const m = String(text || \"\").match(regex);\n  return m ? (m[1] ?? m[0]) : \"\";\n}\n\nfunction parseDateToISO_ES(d) {\n  if (!d) return null;\n  const s = String(d).trim();\n  let m = s.match(/^(\\d{2})[\\/\\-](\\d{2})[\\/\\-](\\d{4})$/);\n  if (m) return `${m[3]}-${m[2]}-${m[1]}`;\n  m = s.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);\n  if (m) return s;\n  return null;\n}\n\nfunction parseMoney(raw) {\n  if (raw === null || raw === undefined) return null;\n  const s = String(raw).trim();\n  if (!s) return null;\n  const cleaned = s.replace(/\\s/g, \"\").replace(/\\./g, \"\").replace(\",\", \".\");\n  const n = Number(cleaned);\n  return Number.isFinite(n) ? n : null;\n}\n\n// --------------------\n// 1) Intento \"normal\": desde $json.output (Gemini OK)\n// --------------------\nconst o = $json.output || {};\n\n// claves exactas del extractor (Gemini map)\nlet supplierName = o[\"Nombre o Razón Social del Proveedor\"] || null;\nlet supplierVatRaw = o[\"NIF/CIF del Proveedor\"] || null;\nlet invoiceNumber = o[\"Número de Factura\"] || null;\nlet invoiceDate = o[\"Fecha de Emisión\"] || null;\n\nlet base = toNumber(o[\"Base Imponible\"]);\nlet vatAmount = toNumber(o[\"IVA\"]);\nlet total = toNumber(o[\"Importe Total a Pagar\"]);\n\nlet supplierVat = cleanVat(supplierVatRaw);\nlet supplierNameNorm = slug(supplierName) || null;\n\n// --------------------\n// 2) Fallback OCR (Mistral): si faltan campos o no hay output útil\n//    Fuente: $json.extractedText o $json.pages[0].markdown\n// --------------------\nconst ocrText = String($json.extractedText || ($json.pages?.[0]?.markdown ?? \"\") || \"\").trim();\n\nconst faltaProveedor = !supplierName;\nconst faltaVat = !supplierVat;\nconst faltaFecha = !invoiceDate;\nconst faltaNumero = !invoiceNumber;\nconst faltaTotal = (total === null);\n\nif (ocrText && (faltaProveedor || faltaVat || faltaFecha || faltaNumero || faltaTotal)) {\n  // 2.1) Invoice number + date desde tabla estilo: \"| 251015472 | 15/11/2025 |\"\n  // (muy típico en tickets/facturas tipo \"FACTURA | DATA | ...\")\n  if (faltaNumero || faltaFecha) {\n    const m = ocrText.match(/\\|\\s*(\\d{6,})\\s*\\|\\s*(\\d{2}[\\/\\-]\\d{2}[\\/\\-]\\d{4})\\s*\\|/);\n    if (m) {\n      if (!invoiceNumber) invoiceNumber = m[1];\n      if (!invoiceDate) invoiceDate = parseDateToISO_ES(m[2]);\n    }\n  }\n\n  // 2.2) Nombre proveedor (heurística de cabecera)\n  // Preferimos la zona superior (antes de líneas / artículos)\n  if (faltaProveedor) {\n    const top = ocrText.split(/\\|\\s*ARTICLE\\b/i)[0] || ocrText;\n\n    let name = \"\";\n    // caso simple: \"la moderna\" en cabecera\n    name = pickFirstMatch(top, /(?:^|\\n)\\s*(la moderna)\\s*(?:\\n|$)/i);\n\n    // razón social en mayúsculas con SA/SL/SLP\n    if (!name) {\n      name = pickFirstMatch(top, /(?:^|\\n)\\s*([A-ZÁÉÍÓÚÜÑ0-9 .,'-]{6,}?\\b(?:S\\.A\\.|SA|S\\.L\\.P\\.|SLP|S\\.L\\.|SL))\\s*(?:\\n|$)/);\n    }\n\n    supplierName = name ? name.trim().toUpperCase() : supplierName;\n    supplierNameNorm = slug(supplierName) || supplierNameNorm;\n  }\n\n  // 2.3) CIF/NIF proveedor:\n  // IMPORTANTE: evitar el CIF de CLIENTE en la tabla \"CLIENT | CIF\"\n  // Buscamos \"CIF\" explícito en cabecera/top, no en la tabla.\n  if (faltaVat) {\n    const top = ocrText.split(/\\|\\s*ARTICLE\\b/i)[0] || ocrText;\n\n    let vat = pickFirstMatch(top, /\\bCIF\\b[^A-Z0-9]{0,10}([A-Z]\\-?\\d{7,8}[A-Z0-9]?|\\d{8}[A-Z])\\b/i);\n    vat = cleanVat(vat);\n\n    supplierVat = vat || supplierVat;\n  }\n\n  // 2.4) Total (opcional, si aparece)\n  if (faltaTotal) {\n    let t = pickFirstMatch(ocrText, /\\b(?:TOTAL|Importe Total)\\b[^0-9]{0,20}([0-9\\.\\,]{3,})/i);\n    const tn = parseMoney(t);\n    if (tn !== null) total = tn;\n  }\n}\n\n// Normalizamos fecha (por si viene DD/MM/YYYY desde Gemini también)\ninvoiceDate = parseDateToISO_ES(invoiceDate) || invoiceDate;\n\n// Recalcular normalizados\nsupplierVat = cleanVat(supplierVat);\nsupplierNameNorm = slug(supplierName) || null;\n\n// --------------------\n// 3) Clave proveedor, hash, validaciones, estado\n// --------------------\nconst claveProveedor = supplierVat\n  ? supplierVat\n  : (supplierNameNorm ? `SINVAT|${supplierNameNorm.toUpperCase()}` : \"SINVAT|SIN_NOMBRE\");\n\nconst hashFactura = `${claveProveedor}|${invoiceNumber || \"SINNUM\"}|${total ?? \"SINTOTAL\"}`;\n\nlet cuadranImportes = null;\nif (base !== null && vatAmount !== null && total !== null) {\n  const diff = Math.abs((base + vatAmount) - total);\n  cuadranImportes = diff < 0.03;\n}\n\nlet confianza = 0.4;\nif (supplierName && supplierVat) confianza = 0.95;\nelse if (supplierName || supplierVat) confianza = 0.75;\nif (cuadranImportes === false) confianza = Math.min(confianza, 0.6);\n\nlet estado = \"OK\";\nif (!supplierName && !supplierVat) estado = \"REVISAR\";\nif (!invoiceNumber || !invoiceDate) estado = \"REVISAR\"; // total puede faltar y aun así seguir, según tu criterio\nif (confianza < 0.7) estado = \"REVISAR\";\n\nconst carpetaNombre = supplierVat\n  ? `${supplierNameNorm || \"PROVEEDOR\"} (${supplierVat})`\n  : `${supplierNameNorm || \"PROVEEDOR\"} (SINVAT)`;\n\n// Debug mínimo para ver de dónde vino (te ayuda 2 días y luego lo quitas)\nconst debug = {\n  has_output: !!$json.output,\n  has_ocrText: !!ocrText,\n  used_fallback: !!(ocrText && ($json.gemini_ok === false || !$json.output)),\n  final_has: {\n    supplierName: !!supplierName,\n    supplierVat: !!supplierVat,\n    invoiceNumber: !!invoiceNumber,\n    invoiceDate: !!invoiceDate,\n    total: total !== null,\n  }\n};\n\nreturn [{\n  json: {\n    ...$json,\n    supplier_name: supplierName,\n    supplier_vat: supplierVat,\n    invoice_number: invoiceNumber,\n    invoice_date: invoiceDate,\n    base,\n    vat_amount: vatAmount,\n    total,\n    clave_proveedor: claveProveedor,\n    nombre_proveedor: supplierName,\n    cif_proveedor: supplierVat,\n    hash_factura: hashFactura,\n    confianza_proveedor: confianza,\n    estado_final: estado,\n    carpeta_proveedor_nombre: carpetaNombre,\n    importes_cuadran: cuadranImportes,\n    debug_normalizar: debug,\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -1456
+      ],
+      "id": "6a740377-9971-4d2a-8e3c-1f0cc6cdbe91",
+      "name": "CODE - Normalizar y decidir"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.ID_archivo_Drive }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('RUTA - Preparar destino final (mes)').item.json.carpeta_destino_id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3808,
+        -1232
+      ],
+      "id": "e816b92c-05a2-4231-994e-8ad8bb585642",
+      "name": "Move file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "15RJYTntqzL7zKD8fFQGFwbjhiopjFPR3GZwAeuWcbVI"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1799858796,
+          "mode": "list",
+          "cachedResultName": "FACTURAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15RJYTntqzL7zKD8fFQGFwbjhiopjFPR3GZwAeuWcbVI/edit#gid=1799858796"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ID_archivo_Drive",
+              "lookupValue": "={{ $('Sheets #1').item.json.ID_archivo_Drive }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3344,
+        -912
+      ],
+      "id": "defd55e7-abb9-4f3f-a6a6-a4724eaf787f",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.Email_message_id }}",
+        "labelIds": [
+          "Label_532282956214537718"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3616,
+        -912
+      ],
+      "id": "1eb7487b-e8cd-44ee-aaee-f7db51ef987e",
+      "name": "Add label to message",
+      "webhookId": "3e716fd3-c212-420e-a8ad-0bd6a0450641",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9dGKgUKoZFhu197E",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_2275218704113080712"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3792,
+        -912
+      ],
+      "id": "6589a67f-baf5-4d1f-80d0-0d5895e7a270",
+      "name": "Remove label from message",
+      "webhookId": "bd79da70-4d5b-458d-80f5-4235e5507bb7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "9dGKgUKoZFhu197E",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-5109980018",
+        "text": "={{ $json.telegram_message }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3552,
+        -544
+      ],
+      "id": "8b6bd830-0373-43ca-96a5-a9bc2882d9d9",
+      "name": "Send a text message",
+      "webhookId": "11d2de5e-edd8-4962-bd0c-ff5f22254828",
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "7E7LTWAduTCDEaqV",
+          "name": "Telegram Jorcano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JavaScript)\n// Nombre sugerido: RUTA - Derivar año/mes/proveedor desde nodos previos\n// Objetivo: construir anio/mes/proveedorFolderName aunque el input de este nodo venga vacío.\n\nfunction cleanStr(v) {\n  return String(v ?? \"\")\n    .replace(/\\s+/g, \" \")\n    .replace(/[“”\"]/g, \"\")\n    .trim();\n}\n\nfunction normalizeCIF(raw) {\n  const s = cleanStr(raw).toUpperCase();\n  return s.replace(/[^A-Z0-9]/g, \"\");\n}\n\nfunction parseDateToISO(raw) {\n  const s = cleanStr(raw);\n  if (!s) return \"\";\n\n  let m = s.match(/^(\\d{4})[-\\/](\\d{2})[-\\/](\\d{2})$/);\n  if (m) return `${m[1]}-${m[2]}-${m[3]}`;\n\n  m = s.match(/^(\\d{2})[-\\/](\\d{2})[-\\/](\\d{4})$/);\n  if (m) return `${m[3]}-${m[2]}-${m[1]}`;\n\n  const d = new Date(s);\n  if (!isNaN(d.getTime())) {\n    const yyyy = d.getFullYear();\n    const mm = String(d.getMonth() + 1).padStart(2, \"0\");\n    const dd = String(d.getDate()).padStart(2, \"0\");\n    return `${yyyy}-${mm}-${dd}`;\n  }\n  return \"\";\n}\n\nfunction pick(obj, keys) {\n  if (!obj || typeof obj !== \"object\") return \"\";\n  for (const k of keys) {\n    const v = obj[k];\n    if (v !== undefined && v !== null && String(v).trim() !== \"\") return v;\n  }\n  return \"\";\n}\n\n// 1) Intentamos armar una “fuente” con prioridad:\n//    input actual → QC → Normalizar → Gemini\nfunction getSource(itemJson) {\n  const srcs = [];\n\n  // input actual\n  if (itemJson && typeof itemJson === \"object\") srcs.push({ name: \"input\", data: itemJson });\n\n  // nodos previos (ajusta nombres si difieren)\n  const qc = $node[\"QC - Validar campos críticos\"]?.json;\n  if (qc) srcs.push({ name: \"qc\", data: qc });\n\n  const norm = $node[\"CODE - Normalizar y decidir\"]?.json;\n  if (norm) srcs.push({ name: \"normalizar\", data: norm });\n\n  const gem = $node[\"GEMINI - Parse + map a output\"]?.json;\n  if (gem) srcs.push({ name: \"gemini\", data: gem });\n\n  // devolvemos en orden de prioridad\n  return srcs;\n}\n\nreturn items.map((item) => {\n  const j = item.json ?? {};\n  const sources = getSource(j);\n\n  // Función para buscar campo en todas las fuentes y devolver también de dónde sale\n  function pickFromSources(keys) {\n    for (const s of sources) {\n      const v = pick(s.data, keys);\n      if (String(v ?? \"\").trim() !== \"\") return { value: v, from: `${s.name}.${keys.find(k => s.data?.[k] !== undefined) ?? \"?\"}` };\n      // nota: el from exacto por key es complicado; esto ya da trazabilidad suficiente\n    }\n    return { value: \"\", from: \"\" };\n  }\n\n  // PROVEEDOR (prioridad a tus campos internos)\n  const provPick = pickFromSources([\n    \"nombre_proveedor\",\n    \"supplier_name\",\n    \"supplier_name_fiscal\",\n    \"proveedorNombre\",\n    \"Nombre o Razón Social del Proveedor\",\n  ]);\n  const proveedor = cleanStr(provPick.value);\n\n  // CIF (prioridad a internos)\n  const cifPick = pickFromSources([\n    \"cif_proveedor\",\n    \"clave_proveedor\",\n    \"proveedorCIF\",\n    \"supplier_vat\",\n    \"NIF/CIF del Proveedor\",\n  ]);\n  const cif = normalizeCIF(cifPick.value);\n\n  // FECHA (prioridad a invoice_date ISO)\n  const fechaPick = pickFromSources([\n    \"invoice_date\",\n    \"fechaISO\",\n    \"fecha_iso\",\n    \"Fecha de Emisión\",\n    \"invoice_date_raw\",\n    \"invoice_date\",\n  ]);\n  const fechaISO = parseDateToISO(fechaPick.value);\n\n  const anio = fechaISO ? fechaISO.slice(0, 4) : \"\";\n  const mes = fechaISO ? `${anio}-${fechaISO.slice(5, 7)}` : \"\";\n\n  // Nombre carpeta proveedor (si existe ya calculado)\n  const carpetaPick = pickFromSources([\n    \"carpeta_proveedor_nombre\",\n    \"carpetaProveedorNombre\",\n    \"proveedorFolderName\",\n  ]);\n  let proveedorFolderName = cleanStr(carpetaPick.value);\n\n  if (!proveedorFolderName) {\n    proveedorFolderName = (cif && proveedor)\n      ? `${cif} - ${proveedor}`\n      : (proveedor ? `SIN_CIF - ${proveedor}` : \"\");\n  }\n\n  const errores = [];\n  if (!proveedor) errores.push(\"Falta proveedor\");\n  if (!cif) errores.push(\"Falta CIF/NIF\");\n  if (!fechaISO) errores.push(\"Falta/No se pudo parsear la fecha\");\n\n  const rutaValida = errores.length === 0;\n\n  item.json = {\n    ...j,\n    proveedor_normalizado: proveedor,\n    cif_normalizado: cif,\n    fecha_iso: fechaISO,\n    anio,\n    mes,\n    proveedorFolderName,\n    rutaValida,\n    errores_ruta: errores,\n    debug_ruta: {\n      proveedor_from: provPick.from,\n      cif_from: cifPick.from,\n      fecha_from: fechaPick.from,\n      carpeta_from: carpetaPick.from,\n      sources_available: sources.map(s => s.name),\n    },\n  };\n\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        -1280
+      ],
+      "id": "250e9bcf-de72-47c8-a7f2-20fc1ff9e97d",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ffcd5049-75aa-44c6-bcdf-807e92a6bd2b",
+              "leftValue": "={{$json.id}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2256,
+        -1456
+      ],
+      "id": "7a57b2cb-1369-4f21-a79c-ee01ad1e0f44",
+      "name": "¿Encontró carpeta año?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bb002eef-3a79-4221-8aa1-e5af94baf52f",
+              "name": "id_carpeta_anio",
+              "value": "={{$json.id}}",
+              "type": "string"
+            },
+            {
+              "id": "8ea234b2-b12a-4461-bded-679dfdd967d0",
+              "name": "nombre_carpeta_anio",
+              "value": "={{$json.name}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2736,
+        -1472
+      ],
+      "id": "08edc120-ed61-4505-acba-0cfddbb5cbc0",
+      "name": "AÑO - Guardar ID carpeta (existe)"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Code in JavaScript1').item.json.anio }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1y1adONEOP8wk3P0kdLArMbYLW0ldaqZM",
+          "mode": "list",
+          "cachedResultName": "03_PROVEEDORES",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1y1adONEOP8wk3P0kdLArMbYLW0ldaqZM"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2464,
+        -1280
+      ],
+      "id": "8b1f5bce-06be-4613-9157-91b65e456b0d",
+      "name": "AÑO - Crear carpeta",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "803d8512-e920-41ff-8a00-ee41845240a0",
+              "name": "id_carpeta_anio",
+              "value": "={{$json.id}}",
+              "type": "string"
+            },
+            {
+              "id": "d8f9df28-bdc3-4d24-ac53-f4d5eb0a06e3",
+              "name": "nombre_carpeta_anio",
+              "value": "={{$json.name}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2656,
+        -1280
+      ],
+      "id": "08521d69-7b2a-4c4e-a224-2c00021ba673",
+      "name": "AÑO - Guardar ID carpeta (creada)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3056,
+        -1392
+      ],
+      "id": "47918dd9-856e-4ce5-9f1c-0596f06f6163",
+      "name": "AÑO - Unificar resultado"
+    },
+    {
+      "parameters": {
+        "content": "## AÑO · Obtener ID carpeta (existe o crear)\n",
+        "height": 464,
+        "width": 1280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1952,
+        -1536
+      ],
+      "typeVersion": 1,
+      "id": "f32571f2-3b49-46c7-a5d5-7ded7a1d2373",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{$node[\"Code in JavaScript1\"].json.proveedorFolderName}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('AÑO - Unificar resultado').item.json.id_carpeta_anio }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2432,
+        -816
+      ],
+      "id": "32e9556b-8a0b-4bb2-a8f4-829bae7eb86e",
+      "name": "PROVEEDOR - Crear carpeta",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4b8fc3ec-b063-4179-8751-aecc2576543e",
+              "name": "id_carpeta_proveedor",
+              "value": "={{$json.id}}",
+              "type": "string"
+            },
+            {
+              "id": "2b57cc9f-2ed7-4d95-be72-da8a20d99f72",
+              "name": "nombre_carpeta_proveedor",
+              "value": "={{$json.name}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2656,
+        -816
+      ],
+      "id": "372fc6b2-ba95-4aaf-aa4d-cd10e75fbf34",
+      "name": "PROVEEDOR - Guardar ID carpeta (creada)"
+    },
+    {
+      "parameters": {
+        "content": "## PROVEEDOR · Obtener ID carpeta (existe o crear)",
+        "height": 400,
+        "width": 1280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1952,
+        -1040
+      ],
+      "typeVersion": 1,
+      "id": "3a821cdf-919f-424e-8c22-712f405fdae2",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{$node[\"Code in JavaScript1\"].json.proveedorFolderName}}",
+        "limit": 1,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id_carpeta_anio }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2048,
+        -976
+      ],
+      "id": "042c9477-4a99-443c-b53e-d0639e1a98ac",
+      "name": "PROVEEDOR - Buscar carpeta",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fbc50c4-871a-463f-9e93-9494d16dfb13",
+              "name": "id_carpeta_proveedor",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "369e580c-6a32-4c75-a8a4-ef877ba5e27b",
+              "name": "nombre_carpeta_proveedor",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2720,
+        -992
+      ],
+      "id": "53c8e9c9-7d29-4b42-8e19-24d321b0c1f2",
+      "name": "PROVEEDOR - Guardar ID carpeta (existe)"
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\nBuscamos dentro de la carpeta **03_PROVEEDORES**",
+        "height": 224,
+        "width": 208,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2000,
+        -1472
+      ],
+      "typeVersion": 1,
+      "id": "cccc0cfa-454b-40f5-af4b-abb4814404d0",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{ $json.anio }}",
+        "limit": 1,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "1y1adONEOP8wk3P0kdLArMbYLW0ldaqZM"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2048,
+        -1456
+      ],
+      "id": "4b336cd7-f8d8-4117-a770-de17a28a9b35",
+      "name": "AÑO - Buscar año",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## MES - Obtener ID carpeta (existe o crear)\n",
+        "height": 400,
+        "width": 1280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1952,
+        -608
+      ],
+      "typeVersion": 1,
+      "id": "97f9796d-bdae-469a-896d-868f47351d32",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": "={{$node[\"Code in JavaScript1\"].json.mes}}",
+        "limit": 1,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{$json.id_carpeta_proveedor}}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2064,
+        -544
+      ],
+      "id": "81549dd5-e41c-487b-aa96-69e4d0fd2c44",
+      "name": "MES - Obtener ID carpeta (existe o crear)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{$node[\"Code in JavaScript1\"].json.mes}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{$node[\"PROVEEDOR - Unificar resultado\"].json.id_carpeta_proveedor}}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2448,
+        -384
+      ],
+      "id": "82461ec7-4046-423e-8f86-154320068fb3",
+      "name": "MES - Crear carpeta",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3024,
+        -928
+      ],
+      "id": "fe0133ce-9d27-41a3-b842-5062becd7f17",
+      "name": "PROVEEDOR - Unificar resultado"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4b8fc3ec-b063-4179-8751-aecc2576543e",
+              "name": "id_carpeta_mes",
+              "value": "={{$json.id}}",
+              "type": "string"
+            },
+            {
+              "id": "2b57cc9f-2ed7-4d95-be72-da8a20d99f72",
+              "name": "nombre_carpeta_mes",
+              "value": "={{$json.name}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2672,
+        -384
+      ],
+      "id": "e66f33f8-399d-49f1-8399-781eee007b68",
+      "name": "MES - Guardar ID carpeta (creada)"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fbc50c4-871a-463f-9e93-9494d16dfb13",
+              "name": "id_carpeta_mes",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "369e580c-6a32-4c75-a8a4-ef877ba5e27b",
+              "name": "nombre_carpeta_mes",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2736,
+        -560
+      ],
+      "id": "20ec45f9-4321-4e5d-bed6-59b991f6fafc",
+      "name": "MES - Guardar ID carpeta (existe)"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3040,
+        -496
+      ],
+      "id": "6e11f51b-33b0-40d1-aa05-dc1ac786229e",
+      "name": "MES - Unificar resultado"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d1c81eb1-01cc-4abd-9c01-f37154fd83ef",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2272,
+        -544
+      ],
+      "id": "2461966d-e9af-4be1-8bea-5f1c838c11df",
+      "name": "¿Encontró carpeta mes?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d1c81eb1-01cc-4abd-9c01-f37154fd83ef",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2256,
+        -976
+      ],
+      "id": "29f3fa77-5717-4be7-bf09-89b4c90f2fb8",
+      "name": "¿Encontró carpeta proveedor?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a95ca318-77bf-42c1-842c-63f95802f1b3",
+              "name": "carpeta_destino_id",
+              "value": "={{$json.id_carpeta_mes}}",
+              "type": "string"
+            },
+            {
+              "id": "51d50ab3-2b1a-4208-a2ac-6f1d75828e2c",
+              "name": "carpeta_destino_url",
+              "value": "={{\"https://drive.google.com/drive/folders/\" + $json.id_carpeta_mes}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3360,
+        -1232
+      ],
+      "id": "eb0edc5e-5862-44ea-8c0b-0702bc3daff5",
+      "name": "RUTA - Preparar destino final (mes)"
+    },
+    {
+      "parameters": {
+        "content": "## Proceso de extracción de datos\n",
+        "height": 480,
+        "width": 1472,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -352,
+        -1568
+      ],
+      "typeVersion": 1,
+      "id": "780f1a82-24db-426b-929f-98e6362695e3",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -160,
+        -1376
+      ],
+      "id": "c943ff62-e101-4cba-874c-006077daa124",
+      "name": "Descargar Archivo",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Movemos el archivo a su sitio",
+        "height": 272,
+        "width": 672,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3296,
+        -1296
+      ],
+      "typeVersion": 1,
+      "id": "8d49eeb9-6dd3-4c39-9221-42623c6a37ed",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 224,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3296,
+        -960
+      ],
+      "typeVersion": 1,
+      "id": "40bab204-89f4-4bec-bc95-bd888195c5de",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Actualziamos etiquetas en Gmail",
+        "height": 256,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3552,
+        -976
+      ],
+      "typeVersion": 1,
+      "id": "804ec0df-2931-448a-9f22-db2c5e44154b",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "## Preparamos y enviamos mensaje por telegram",
+        "height": 288,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3312,
+        -640
+      ],
+      "typeVersion": 1,
+      "id": "6d65a5fe-bc20-46ba-bcf2-7cd1e10a5590",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "jsCode": "function fmtEUR(n) {\n  if (n === null || n === undefined || n === \"\") return \"—\";\n  const v = typeof n === \"number\" ? n : Number(String(n).replace(\",\", \".\"));\n  if (!Number.isFinite(v)) return \"—\";\n  return v.toLocaleString(\"es-ES\", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + \" €\";\n}\n\nfunction fmtDate(d) {\n  if (!d) return \"—\";\n  const s = String(d).trim();\n  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) {\n    const [y, m, dd] = s.split(\"-\");\n    return `${dd}/${m}/${y}`;\n  }\n  return s;\n}\n\nfunction esc(s) {\n  return String(s ?? \"—\")\n    .replace(/&/g, \"&amp;\")\n    .replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\");\n}\n\nfunction fileUrl(id) {\n  return id ? `https://drive.google.com/file/d/${id}/view` : null;\n}\n\nfunction safeNodeJson(nodeName) {\n  try {\n    return $node[nodeName]?.json ?? null;\n  } catch (e) {\n    return null;\n  }\n}\n\nfunction pick(...vals) {\n  for (const v of vals) {\n    if (v !== null && v !== undefined && String(v).trim() !== \"\") return v;\n  }\n  return null;\n}\n\nconst src = $node[\"CODE - Normalizar y decidir\"].json;\n\nconst proveedor = esc(src.nombre_proveedor || src.supplier_name || \"—\");\nconst cif = esc(src.cif_proveedor || src.supplier_vat || \"—\");\nconst num = esc(src.invoice_number || \"—\");\nconst fecha = esc(fmtDate(src.invoice_date));\n\nconst base = esc(fmtEUR(src.base));\nconst iva = esc(fmtEUR(src.vat_amount));\nconst total = esc(fmtEUR(src.total));\n\nconst estado = esc(src.estado_final || \"OK\");\nconst icono = estado === \"OK\" ? \"✅\" : (estado === \"REVISAR\" ? \"⚠️\" : \"❌\");\n\n// Link al archivo (mejor: el que ya se movió a destino)\nconst moved = safeNodeJson(\"Move file\") || {};\nconst movedFileId = pick(moved.id, moved.fileId, moved?.data?.id);\nconst linkFactura = movedFileId ? fileUrl(movedFileId) : null;\n\n// Errores (si existen)\nconst erroresArr = Array.isArray(src.errores) ? src.errores : (Array.isArray(src.errors) ? src.errors : []);\nconst erroresTxt = erroresArr.length ? erroresArr.map(e => `• ${esc(e)}`).join(\"\\n\") : \"\";\n\nlet msg =\n`${icono} <b>Factura ${estado}</b>\\n` +\n`• <b>Proveedor:</b> ${proveedor}\\n` +\n`• <b>CIF:</b> ${cif}\\n` +\n`• <b>Nº factura:</b> ${num}\\n` +\n`• <b>Fecha:</b> ${fecha}\\n` +\n`• <b>Base:</b> ${base}\\n` +\n`• <b>IVA:</b> ${iva}\\n` +\n`• <b>Total:</b> ${total}`;\n\nif (linkFactura) {\n  msg += `\\n\\n🔗 <a href=\"${linkFactura}\">Ver factura</a>`;\n}\n\n// Solo si NO es OK, añadimos motivo (para que el cliente actúe)\nif (estado !== \"OK\" && erroresTxt) {\n  msg += `\\n\\n<b>Motivo:</b>\\n${erroresTxt}`;\n}\n\nreturn [{ json: { telegram_message: msg } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        -544
+      ],
+      "id": "29ed0799-735c-4a60-9154-b077b97a4eb5",
+      "name": "Preparar mensaje Telegram"
+    },
+    {
+      "parameters": {
+        "jsCode": "// QC - Validar campos críticos (Run Once for All Items)\n// Elige el mejor item por scoring + debug para verificar elección.\n\nfunction norm(v) {\n  return String(v ?? '').trim();\n}\n\nfunction getCifFromItem(it) {\n  const j = it.json || {};\n  const o = j.output || {};\n\n  // 1) Lo que tú ya usas en tu extractor/normalizador (clave “larga”)\n  const cif1 = norm(o[\"NIF/CIF del Proveedor\"]);\n\n  // 2) Campos normalizados\n  const cif2 = norm(j.cif_proveedor);\n  const cif3 = norm(j.supplier_vat);\n\n  // 3) Gemini parsed (por si te quedas con esto en algún paso)\n  const cif4 = norm(j.gemini_parsed?.supplier_vat);\n\n  return cif1 || cif2 || cif3 || cif4 || '';\n}\n\nfunction getNameFromItem(it) {\n  const j = it.json || {};\n  const o = j.output || {};\n  return norm(o[\"Nombre o Razón Social del Proveedor\"]) || norm(j.supplier_name) || norm(j.nombre_proveedor) || norm(j.gemini_parsed?.supplier_name_fiscal) || '';\n}\n\nfunction getDateFromItem(it) {\n  const j = it.json || {};\n  const o = j.output || {};\n  return norm(o[\"Fecha de Emisión\"]) || norm(j.invoice_date) || '';\n}\n\nfunction getInvoiceNumberFromItem(it) {\n  const j = it.json || {};\n  const o = j.output || {};\n  return norm(o[\"Número de Factura\"]) || norm(j.invoice_number) || '';\n}\n\nfunction score(it) {\n  const j = it.json || {};\n  const cif = getCifFromItem(it);\n  const name = getNameFromItem(it);\n  const date = getDateFromItem(it);\n  const num = getInvoiceNumberFromItem(it);\n\n  let s = 0;\n\n  // Prioridad: si viene de Gemini y marcaste gemini_ok\n  if (j.gemini_ok === true) s += 100;\n\n  // CIF presente es crítico\n  if (cif) s += 50;\n\n  // Otros campos “buenos”\n  if (name) s += 10;\n  if (date) s += 5;\n  if (num) s += 5;\n\n  // Bonus si el nombre “fiscal” parece más completo (más largo)\n  if (name && name.length >= 15) s += 2;\n\n  return { s, cif, name, date, num, gemini_ok: j.gemini_ok === true };\n}\n\n// 1) Puntuar todos los items\nconst scored = items.map((it, idx) => {\n  const r = score(it);\n  return { idx, ...r };\n});\n\n// 2) Elegir el mejor\nscored.sort((a, b) => b.s - a.s);\nconst best = scored[0];\nconst chosen = items[best.idx];\n\n// 3) Calcular QC (críticos)\nconst proveedorNombre = best.name;\nconst proveedorCIF = best.cif;\nconst fechaISO = best.date;\nconst numeroFactura = best.num;\n\nconst missing = [];\nif (!proveedorNombre) missing.push('proveedor_nombre_fiscal');\nif (!proveedorCIF) missing.push('proveedor_cif');\nif (!fechaISO) missing.push('fecha_iso');\n\nconst needsFallback = missing.length > 0;\n\n// 4) Salida única + debug para verificar la elección\nreturn [{\n  json: {\n    ...chosen.json,\n    qc: {\n      needs_fallback: needsFallback,\n      missing_fields: missing,\n      proveedorNombre,\n      proveedorCIF,\n      fechaISO,\n      numeroFactura,\n      qc_reason: needsFallback ? `Faltan campos críticos: ${missing.join(', ')}` : 'OK',\n      debug: {\n        chosen_index: best.idx,\n        chosen_score: best.s,\n        chosen_gemini_ok: best.gemini_ok,\n        seen: scored, // <- aquí verás CIFs detectados y puntuación de cada item\n      }\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -1456
+      ],
+      "id": "d644affd-b479-48b3-a6fa-9ccc761e8562",
+      "name": "QC - Validar campos críticos"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "80bc6196-f766-49aa-aa95-cc184adbe337",
+              "leftValue": "={{$json.qc.needs_fallback}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        -1232
+      ],
+      "id": "7f35119e-4d31-4391-b030-c5dca0395111",
+      "name": "IF - Faltan datos críticos?"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "Extrae datos estructurados de esta factura.\n\nIMPORTANTE:\n- El NIF/CIF y el nombre fiscal del proveedor pueden estar en el lateral o en texto vertical.\n- Busca también texto rotado y en los márgenes.\n\nDevuelve SOLO un JSON válido, sin texto adicional, con estas claves exactas:\n{\n  \"supplier_name_fiscal\": string | null,\n  \"supplier_vat\": string | null,\n  \"invoice_number\": string | null,\n  \"invoice_date\": string | null,\n  \"base\": number | null,\n  \"vat_amount\": number | null,\n  \"total\": number | null\n}\nSi un dato no aparece claramente, devuelve null.\n",
+        "inputType": "binary",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        352,
+        -1456
+      ],
+      "id": "8e52feda-4db7-4651-bf27-727779b2f330",
+      "name": "Analyze document1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yuBD3rLapvMyLqyu",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function stripCodeFences(s) {\n  if (!s) return '';\n  let t = String(s).trim();\n  // quita ```json ... ``` o ``` ... ```\n  t = t.replace(/^```(?:json)?\\s*/i, '');\n  t = t.replace(/```$/i, '');\n  return t.trim();\n}\n\nfunction toISODate(d) {\n  if (!d) return null;\n  const s = String(d).trim();\n\n  // YYYY-MM-DD\n  if (/^\\d{4}-\\d{2}-\\d{2}$/.test(s)) return s;\n\n  // DD/MM/YYYY o DD-MM-YYYY\n  let m = s.match(/^(\\d{2})[\\/\\-](\\d{2})[\\/\\-](\\d{4})$/);\n  if (m) return `${m[3]}-${m[2]}-${m[1]}`;\n\n  // DD/MM/YY o DD-MM-YY\n  m = s.match(/^(\\d{2})[\\/\\-](\\d{2})[\\/\\-](\\d{2})$/);\n  if (m) {\n    const yy = Number(m[3]);\n    // Regla típica: 00-69 => 2000-2069, 70-99 => 1970-1999\n    const yyyy = (yy <= 69) ? (2000 + yy) : (1900 + yy);\n    return `${yyyy}-${m[2]}-${m[1]}`;\n  }\n\n  return null;\n}\n\nconst txt = $json?.content?.parts?.[0]?.text || '';\nconst clean = stripCodeFences(txt);\n\nlet parsed;\ntry {\n  parsed = JSON.parse(clean);\n} catch (e) {\n  return [{\n    json: {\n      ...$json,\n      gemini_ok: false,\n      gemini_error: 'JSON parse failed',\n      gemini_raw: txt\n    }\n  }];\n}\n\nconst supplierName = parsed.supplier_name_fiscal ?? null;\nconst supplierVat  = parsed.supplier_vat ?? null;\nconst invoiceNum   = parsed.invoice_number ?? null;\nconst invoiceDate  = toISODate(parsed.invoice_date);\nconst base         = (typeof parsed.base === 'number') ? parsed.base : null;\nconst vatAmount    = (typeof parsed.vat_amount === 'number') ? parsed.vat_amount : null;\nconst total        = (typeof parsed.total === 'number') ? parsed.total : null;\n\n// Esto es lo clave: crear $json.output con las claves EXACTAS que ya usa tu Normalizar\nconst mappedOutput = {\n  \"Nombre o Razón Social del Proveedor\": supplierName,\n  \"NIF/CIF del Proveedor\": supplierVat,\n  \"Número de Factura\": invoiceNum,\n  \"Fecha de Emisión\": invoiceDate,\n  \"Base Imponible\": base,\n  \"IVA\": vatAmount,\n  \"Importe Total a Pagar\": total\n};\n\nreturn [{\n  json: {\n    ...$json,\n    output: mappedOutput,\n    gemini_ok: true,\n    gemini_parsed: parsed\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -1456
+      ],
+      "id": "612c743e-c038-43b5-a3ee-be35f71e513c",
+      "name": "GEMINI - Parse + map a output"
+    },
+    {
+      "parameters": {
+        "content": "## Camino en caso de ERROR",
+        "height": 272,
+        "width": 976,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        -912
+      ],
+      "typeVersion": 1,
+      "id": "fba50aff-e3a0-4818-8a73-14bfe533de45",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Drive Trigger').item.json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "=12OSpOuYE29MJ8dXdQhlerVqGARSstD05",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        832,
+        -832
+      ],
+      "id": "c33623bb-67f9-4b28-9a69-943481983f26",
+      "name": "Movemos Archivo a carpeta - 01_ERROR",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Preparamos mensaje de notificación Error (Telegram HTML)\n * Objetivo:\n * - NO perder datos aunque vengas del nodo \"Movemos Archivo...\" (que devuelve poco JSON)\n * - Construir pendientes/detectados coherentes\n * - Link bonito \"Ver factura\" (HTML)\n *\n * IMPORTANTE:\n * - Asegúrate de que el nodo se llama EXACTAMENTE: \"QC - Validar campos críticos\"\n *   Si tu nombre difiere, cámbialo en la línea const src = $('...').item.json\n */\n\n// --- Helpers ---\nfunction pickFirst(...vals) {\n  for (const v of vals) {\n    if (v === undefined || v === null) continue;\n    const s = String(v).trim();\n    if (s !== \"\") return v;\n  }\n  return \"\";\n}\n\nfunction normStr(v) {\n  const s = String(v ?? \"\").trim();\n  return s === \"\" ? \"\" : s;\n}\n\n// 1) src = item \"rico\" con datos detectados (del QC)\n// 2) moved = item actual (normalmente viene del Move y trae id/name/mimeType)\nconst src = $('QC - Validar campos críticos').item?.json || $json;\nconst moved = $json;\n\nconst qc = src.qc || {};\nconst inc = src.incidencia || moved.incidencia || {};\n\n// --- Archivo + link ---\nconst fileId = pickFirst(\n  moved.id,\n  src.id,\n  moved.fileId,\n  src.fileId,\n  moved.drive_file_id,\n  src.drive_file_id,\n  moved.id_archivo_drive,\n  src.id_archivo_drive\n);\n\nconst fileName = pickFirst(\n  moved.name,\n  src.name,\n  moved.fileName,\n  src.fileName,\n  moved?.binary?.data?.fileName,\n  src?.binary?.data?.fileName,\n  \"factura\"\n);\n\nconst fileUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view` : \"\";\n\n// --- Campos \"reales\" (los tuyos del normalizador/QC) ---\nconst proveedor = pickFirst(\n  src.supplier_name,\n  src.nombre_proveedor,\n  qc.proveedorNombre\n);\n\nconst cif = pickFirst(\n  src.supplier_vat,\n  src.cif_proveedor,\n  qc.proveedorCIF\n);\n\nconst numFactura = pickFirst(\n  src.invoice_number,\n  qc.numeroFactura\n);\n\nconst fecha = pickFirst(\n  src.invoice_date,\n  qc.fechaISO\n);\n\nconst total = pickFirst(\n  src.total,\n  qc.total\n);\n\n// --- Recalcular pendientes/detectados coherentes ---\nconst fields = [\n  { key: \"proveedor\", label: \"Nombre fiscal del proveedor\", value: normStr(proveedor) },\n  { key: \"cif\", label: \"CIF/NIF del proveedor\", value: normStr(cif) },\n  { key: \"fecha\", label: \"Fecha de emisión\", value: normStr(fecha) },\n  { key: \"numero\", label: \"Número de factura\", value: normStr(numFactura) },\n  { key: \"total\", label: \"Total\", value: normStr(total) },\n];\n\nconst pendientes = fields\n  .filter(f => !f.value)\n  .map(f => `• ${f.label}`);\n\nconst detectados = fields\n  .filter(f => !!f.value)\n  .map(f => `• ${f.label}: ${f.value}`);\n\n// --- Motivo ---\nconst reason = pickFirst(\n  inc.reason,\n  qc.qc_reason,\n  src.estado_final && src.estado_final !== \"OK\" ? `Estado: ${src.estado_final}` : \"\",\n  \"ERROR: faltan datos críticos\"\n);\n\n// --- Link bonito (HTML) ---\nconst linkLine = fileUrl ? `🔗 <a href=\"${fileUrl}\">Ver factura</a>` : \"\";\n\n// --- Texto final (HTML) ---\nconst text =\n  `⚠️ <b>FACTURA A REVISAR</b>\\n\\n` +\n  `📄 <b>Archivo:</b> ${fileName}\\n\\n` +\n  `❗ <b>Motivo:</b>\\n${reason}\\n\\n` +\n  `❌ <b>Campos pendientes:</b>\\n${pendientes.length ? pendientes.join(\"\\n\") : \"• (ninguno)\"}\\n\\n` +\n  `✅ <b>Datos detectados:</b>\\n${detectados.length ? detectados.join(\"\\n\") : \"• (ninguno)\"}\\n\\n` +\n  `🛠️ <b>Acción requerida:</b>\\nRevisar la factura y completar los datos faltantes.` +\n  (linkLine ? `\\n\\n${linkLine}` : \"\");\n\n// --- Devuelve el payload para Telegram ---\nreturn [{\n  json: {\n    ...moved,     // conservas id/name/mimeType del Move\n    ...src,       // conservas datos detectados del QC/normalizador\n    incidencia: {\n      ...inc,\n      is_error: true,\n      reason,\n      fileName,\n      fileUrl,\n      pendientes,\n      detectados,\n      telegram_text: text, // <- esto es HTML\n      debug_msg: {\n        proveedor,\n        cif,\n        fecha,\n        numFactura,\n        total,\n        fileId,\n        has_qc: !!src.qc,\n      }\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -832
+      ],
+      "id": "104394e2-3361-405d-90e3-9743db74c15b",
+      "name": "Preparamos mensaje de notificación Error"
+    },
+    {
+      "parameters": {
+        "chatId": "744540657",
+        "text": "={{ $json.incidencia.telegram_text }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1248,
+        -832
+      ],
+      "id": "58f58230-c8a5-4ff0-baca-95b8391acf15",
+      "name": "Enviamos Notificación de Error",
+      "webhookId": "11d2de5e-edd8-4962-bd0c-ff5f22254828",
+      "notesInFlow": false,
+      "credentials": {
+        "telegramApi": {
+          "id": "7E7LTWAduTCDEaqV",
+          "name": "Telegram Jorcano"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentType": "image_url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mistralAi",
+      "typeVersion": 1,
+      "position": [
+        352,
+        -1264
+      ],
+      "id": "6fd7254c-d07d-428e-ae3a-f8c81dffd127",
+      "name": "Extract text",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "rvr86VR8jK44T9YJ",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        -1376
+      ],
+      "id": "50954750-4261-47cf-9bad-a5034639a9dc",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JavaScript) - NO crypto/require\n// Input: Mistral OCR output with extractedText and/or pages[].markdown\n\nfunction pickText(item) {\n  const j = item.json || {};\n  const parts = [];\n\n  if (typeof j.extractedText === 'string' && j.extractedText.trim()) parts.push(j.extractedText);\n\n  if (Array.isArray(j.pages)) {\n    for (const p of j.pages) {\n      if (typeof p.markdown === 'string' && p.markdown.trim()) parts.push(p.markdown);\n    }\n  }\n\n  if (!parts.length) parts.push(JSON.stringify(j));\n\n  return parts.join('\\n\\n')\n    .replace(/\\r/g, '')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nfunction normalizeAmount(str) {\n  if (!str) return null;\n  const s = String(str)\n    .replace(/\\s/g, '')\n    .replace(/\\./g, '')  // thousands\n    .replace(',', '.');  // decimal\n  const v = Number(s);\n  return Number.isFinite(v) ? v : null;\n}\n\n// VAT/NIF/CIF/NIE robusto (evita teléfonos)\nfunction findAllVats(text) {\n  const lines = text.split('\\n').map(l => l.trim()).filter(Boolean);\n\n  // Preferimos líneas donde explícitamente pone NIF/CIF/VAT\n  const vatLines = lines.filter(l => /\\b(NIF|N\\.I\\.F|CIF|VAT)\\b/i.test(l));\n\n  const candidates = [];\n\n  function pushMatches(str) {\n    if (!str) return;\n\n    // CIF: letra + 7 dígitos + control (dígito o letra A-J)\n    const cif = str.match(/\\b([ABCDEFGHJNPQRSUVW])[0-9]{7}[0-9A-J]\\b/gi) || [];\n\n    // NIF: 8 dígitos + letra\n    const nif = str.match(/\\b[0-9]{8}[A-Z]\\b/gi) || [];\n\n    // NIE: X/Y/Z + 7 dígitos + letra\n    const nie = str.match(/\\b[XYZ][0-9]{7}[A-Z]\\b/gi) || [];\n\n    for (const x of [...cif, ...nif, ...nie]) candidates.push(x.toUpperCase());\n  }\n\n  // Primero “líneas buenas”\n  for (const l of vatLines) pushMatches(l);\n\n  // Luego el texto completo\n  pushMatches(text);\n\n  // Dedupe manteniendo orden\n  const uniq = [];\n  const seen = new Set();\n  for (const c of candidates) {\n    if (!seen.has(c)) {\n      seen.add(c);\n      uniq.push(c);\n    }\n  }\n  return uniq;\n}\n\nfunction findInvoiceDate(text) {\n  const re = /\\b(0?[1-9]|[12][0-9]|3[01])[\\/\\-\\.](0?[1-9]|1[0-2])[\\/\\-\\.]((?:19|20)?\\d{2})\\b/g;\n  const candidates = [];\n  let m;\n\n  while ((m = re.exec(text)) !== null) {\n    let yy = m[3];\n    if (yy.length === 2) yy = '20' + yy;\n    const dd = String(m[1]).padStart(2, '0');\n    const mm = String(m[2]).padStart(2, '0');\n    candidates.push(`${dd}/${mm}/${yy}`);\n  }\n\n  // Si hay \"FECHA\" cerca, prioriza la primera que aparezca en esa ventana\n  const idxFecha = text.toUpperCase().indexOf('FECHA');\n  if (idxFecha >= 0) {\n    const window = text.slice(idxFecha, idxFecha + 250);\n    const m2 = window.match(/\\b(0?[1-9]|[12][0-9]|3[01])[\\/\\-\\.](0?[1-9]|1[0-2])[\\/\\-\\.]((?:19|20)?\\d{2})\\b/);\n    if (m2) {\n      let yy = m2[3];\n      if (yy.length === 2) yy = '20' + yy;\n      return `${String(m2[1]).padStart(2,'0')}/${String(m2[2]).padStart(2,'0')}/${yy}`;\n    }\n  }\n\n  return candidates[0] || null;\n}\n\n// Número factura: prioriza tabla FECHA|CLIENTE|FACTURA|PÁGINA\nfunction findInvoiceNumber(text) {\n  // Caso tabla típica:\n  // | 01/12/25 | 857 | 1836 | 1 |\n  const tableRow = text.match(/\\|\\s*(\\d{1,2}\\/\\d{1,2}\\/\\d{2,4})\\s*\\|\\s*\\d+\\s*\\|\\s*([A-Z0-9\\-\\/]{2,20})\\s*\\|\\s*\\d+\\s*\\|/i);\n  if (tableRow) return tableRow[2].trim();\n\n  // Cerca de palabra FACTURA\n  const t = text.replace(/\\n/g, ' ');\n  const reNear = /(FACTURA|N[ºO]\\s*FACTURA|NUM(?:ERO)?\\s*FACTURA)\\s*[:#]?\\s*([A-Z0-9\\-\\/]{2,20})/i;\n  const m = t.match(reNear);\n  if (m) return m[2].trim();\n\n  return null;\n}\n\nfunction findTotal(text) {\n  const lines = text.split('\\n').map(l => l.trim()).filter(Boolean);\n\n  const keys = ['IMPORTE LIQUIDO', 'TOTAL FACTURA', 'TOTAL A PAGAR', 'TOTAL'];\n\n  for (const k of keys) {\n    const ku = k.toUpperCase();\n    for (const line of lines) {\n      const u = line.toUpperCase();\n      if (u.includes(ku)) {\n        const m = line.match(/([0-9]{1,3}(?:\\.[0-9]{3})*,[0-9]{2}|[0-9]+,[0-9]{2}|[0-9]+(?:\\.[0-9]{2})?)(?!.*([0-9]{1,3}(?:\\.[0-9]{3})*,[0-9]{2}|[0-9]+,[0-9]{2}|[0-9]+(?:\\.[0-9]{2})?))/);\n        if (m) {\n          const v = normalizeAmount(m[1]);\n          if (v !== null) return v;\n        }\n      }\n    }\n  }\n\n  // fallback: mayor valor monetario encontrado\n  const all = [];\n  const re = /([0-9]{1,3}(?:\\.[0-9]{3})*,[0-9]{2}|[0-9]+,[0-9]{2})/g;\n  let mm;\n  while ((mm = re.exec(text)) !== null) {\n    const v = normalizeAmount(mm[1]);\n    if (v !== null) all.push(v);\n  }\n  if (!all.length) return null;\n  return Math.max(...all);\n}\n\n// Hash “decente” sin crypto (cyrb53)\nfunction cyrb53(str, seed = 0) {\n  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;\n  for (let i = 0, ch; i < str.length; i++) {\n    ch = str.charCodeAt(i);\n    h1 = Math.imul(h1 ^ ch, 2654435761);\n    h2 = Math.imul(h2 ^ ch, 1597334677);\n  }\n  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);\n  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);\n  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);\n}\n\nfunction makeHashFactura({ supplier_vat, invoice_number, invoice_date, total, text }) {\n  const raw = [\n    supplier_vat || '',\n    invoice_number || '',\n    invoice_date || '',\n    (total ?? '').toString(),\n    (text || '').slice(0, 2000),\n  ].join('|');\n  return cyrb53(raw);\n}\n\n// Nombre proveedor robusto: ignora headings y prioriza SL/SA/...\nfunction guessSupplierName(text) {\n  const head = text.split('\\n').slice(0, 30).map(l => l.trim()).filter(Boolean);\n\n  // Quita headings markdown tipo \"# ...\"\n  const cleaned = head.filter(l => !/^#{1,6}\\s/.test(l));\n\n  // Prioridad: razón social típica\n  for (const l of cleaned) {\n    const u = l.toUpperCase();\n    if (/(S\\.L\\.U\\.|S\\.L\\.P\\.|S\\.L\\.|SLU\\b|SL\\b|S\\.A\\.|SA\\b)\\b/.test(u)) {\n      return l.replace(/\\*\\*/g, '').trim();\n    }\n  }\n\n  // Fallback: “pinta empresa”\n  for (const l of cleaned) {\n    const u = l.toUpperCase();\n    if (u.includes('ASSESSOR') || u.includes('CONSTRUCC') || u.includes('SERVICIOS')) {\n      return l.replace(/\\*\\*/g, '').trim();\n    }\n  }\n\n  return null;\n}\n\nfunction buildMissing(out) {\n  const missing = [];\n  if (!out.supplier_vat) missing.push('supplier_vat');\n  if (!out.invoice_date) missing.push('invoice_date');\n  if (out.total === null || out.total === undefined || out.total === '') missing.push('total');\n  return missing;\n}\n\n// Intento opcional (muy raro) de extraer \"clave_proveedor\" explícita si viniera en el texto\nfunction findClaveProveedor(text) {\n  const t = text.replace(/\\n/g, ' ');\n  const m = t.match(/\\b(CLAVE[_\\s-]?PROVEEDOR|ID[_\\s-]?PROVEEDOR)\\b\\s*[:#]?\\s*([A-Z0-9_-]{2,40})\\b/i);\n  return m ? m[2].trim() : null;\n}\n\nreturn items.map((item) => {\n  const text = pickText(item);\n\n  const vats = findAllVats(text);\n  const supplier_vat = vats[0] || null;\n\n  const invoice_number = findInvoiceNumber(text);\n  const invoice_date = findInvoiceDate(text);\n  const total = findTotal(text);\n\n  const supplier_name_fiscal = guessSupplierName(text);\n\n  // score\n  let score = 0;\n  if (supplier_name_fiscal) score += 0.2;\n  if (supplier_vat) score += 0.3;\n  if (invoice_number) score += 0.2;\n  if (invoice_date) score += 0.15;\n  if (typeof total === 'number') score += 0.15;\n  const confianza = Math.round(score * 100) / 100;\n\n  const out = {\n    supplier_name_fiscal,\n    supplier_vat,\n    invoice_number,\n    invoice_date,\n    total,\n    confianza,\n    raw_text: text,\n  };\n\n  out.hash_factura = makeHashFactura({ ...out, text });\n\n  // ✅ NUEVO: clave_proveedor para que el downstream no pete\n  // 1) Si aparece explícita en el texto, úsala.\n  // 2) Si no, usa el CIF/NIF del proveedor como clave (fallback seguro).\n  out.clave_proveedor = findClaveProveedor(text) || out.supplier_vat || null;\n\n  const missing = buildMissing(out);\n  out.estado_final = missing.length ? 'REVISAR' : 'OK';\n\n  // Si quieres entrar directo a IF sin QC:\n  out.qc = {\n    missing_fields: missing,\n    qc_reason: missing.length ? `Faltan campos críticos: ${missing.join(', ')}` : 'OK',\n  };\n\n  item.json = out;\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -1264
+      ],
+      "id": "8fd7c5c1-f93b-4390-95ff-59e7cd17a662",
+      "name": "CODE - Mistral: extraer texto + críticos (regex + heurística)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Analyze document1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Descargar Archivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets #1": {
+      "main": [
+        [
+          {
+            "node": "Move file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE - Normalizar y decidir": {
+      "main": [
+        [
+          {
+            "node": "QC - Validar campos críticos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Remove label from message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove label from message": {
+      "main": [
+        [
+          {
+            "node": "Preparar mensaje Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AÑO - Buscar año",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Encontró carpeta año?": {
+      "main": [
+        [
+          {
+            "node": "AÑO - Guardar ID carpeta (existe)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AÑO - Crear carpeta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AÑO - Guardar ID carpeta (existe)": {
+      "main": [
+        [
+          {
+            "node": "AÑO - Unificar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AÑO - Crear carpeta": {
+      "main": [
+        [
+          {
+            "node": "AÑO - Guardar ID carpeta (creada)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AÑO - Guardar ID carpeta (creada)": {
+      "main": [
+        [
+          {
+            "node": "AÑO - Unificar resultado",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AÑO - Unificar resultado": {
+      "main": [
+        [
+          {
+            "node": "PROVEEDOR - Buscar carpeta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROVEEDOR - Crear carpeta": {
+      "main": [
+        [
+          {
+            "node": "PROVEEDOR - Guardar ID carpeta (creada)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROVEEDOR - Guardar ID carpeta (creada)": {
+      "main": [
+        [
+          {
+            "node": "PROVEEDOR - Unificar resultado",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "PROVEEDOR - Buscar carpeta": {
+      "main": [
+        [
+          {
+            "node": "¿Encontró carpeta proveedor?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROVEEDOR - Guardar ID carpeta (existe)": {
+      "main": [
+        [
+          {
+            "node": "PROVEEDOR - Unificar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AÑO - Buscar año": {
+      "main": [
+        [
+          {
+            "node": "¿Encontró carpeta año?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MES - Obtener ID carpeta (existe o crear)": {
+      "main": [
+        [
+          {
+            "node": "¿Encontró carpeta mes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MES - Crear carpeta": {
+      "main": [
+        [
+          {
+            "node": "MES - Guardar ID carpeta (creada)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PROVEEDOR - Unificar resultado": {
+      "main": [
+        [
+          {
+            "node": "MES - Obtener ID carpeta (existe o crear)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MES - Guardar ID carpeta (creada)": {
+      "main": [
+        [
+          {
+            "node": "MES - Unificar resultado",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "MES - Guardar ID carpeta (existe)": {
+      "main": [
+        [
+          {
+            "node": "MES - Unificar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Encontró carpeta mes?": {
+      "main": [
+        [
+          {
+            "node": "MES - Guardar ID carpeta (existe)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MES - Crear carpeta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Encontró carpeta proveedor?": {
+      "main": [
+        [
+          {
+            "node": "PROVEEDOR - Guardar ID carpeta (existe)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PROVEEDOR - Crear carpeta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MES - Unificar resultado": {
+      "main": [
+        [
+          {
+            "node": "RUTA - Preparar destino final (mes)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RUTA - Preparar destino final (mes)": {
+      "main": [
+        [
+          {
+            "node": "Sheets #1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar Archivo": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar mensaje Telegram": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QC - Validar campos críticos": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Faltan datos críticos?": {
+      "main": [
+        [
+          {
+            "node": "Movemos Archivo a carpeta - 01_ERROR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document1": {
+      "main": [
+        [
+          {
+            "node": "GEMINI - Parse + map a output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GEMINI - Parse + map a output": {
+      "main": [
+        [
+          {
+            "node": "CODE - Normalizar y decidir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Movemos Archivo a carpeta - 01_ERROR": {
+      "main": [
+        [
+          {
+            "node": "Preparamos mensaje de notificación Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparamos mensaje de notificación Error": {
+      "main": [
+        [
+          {
+            "node": "Enviamos Notificación de Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviamos Notificación de Error": {
+      "main": [
+        []
+      ]
+    },
+    "Extract text": {
+      "main": [
+        [
+          {
+            "node": "CODE - Mistral: extraer texto + críticos (regex + heurística)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "IF - Faltan datos críticos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE - Mistral: extraer texto + críticos (regex + heurística)": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "99125a84-5eb3-4279-be4a-e2bf160ddf37",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0"
+  },
+  "id": "PFfZyD6XAcTMlZU1",
+  "tags": [
+    {
+      "updatedAt": "2025-12-03T16:38:09.818Z",
+      "createdAt": "2025-12-03T16:38:09.818Z",
+      "id": "8LAQQwNZWR5ovoSh",
+      "name": "extractor"
+    },
+    {
+      "updatedAt": "2026-01-09T11:09:41.418Z",
+      "createdAt": "2026-01-09T11:09:41.418Z",
+      "id": "QcVe8o2UrVN6eTEf",
+      "name": "Organizar"
+    },
+    {
+      "updatedAt": "2025-12-03T16:38:02.233Z",
+      "createdAt": "2025-12-03T16:38:02.233Z",
+      "id": "UaDQvmRokPaNdwHB",
+      "name": "facturas"
+    },
+    {
+      "updatedAt": "2026-01-09T11:09:47.577Z",
+      "createdAt": "2026-01-09T11:09:47.577Z",
+      "id": "hl1x0QldphRoU3py",
+      "name": "Cliente Eloi"
+    },
+    {
+      "updatedAt": "2025-12-03T16:38:05.213Z",
+      "createdAt": "2025-12-03T16:38:05.213Z",
+      "id": "mVr2yDA8vUvXXpjD",
+      "name": "ocr"
+    }
+  ]
+}
