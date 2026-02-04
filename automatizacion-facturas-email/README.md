@@ -9,6 +9,12 @@ Empresa de servicios con alto volumen de facturas recibidas por email.
 - Errores humanos y falta de control
 - Dependencia de una persona clave
 
+## Impacto de negocio
+- Ahorro significativo de tiempo administrativo
+- Reducción de errores humanos en el registro
+- Mayor control y trazabilidad de facturas
+- Proceso auditable y repetible
+
 ## Solución
 Sistema automático que:
 1. Detecta nuevas facturas entrantes por email
