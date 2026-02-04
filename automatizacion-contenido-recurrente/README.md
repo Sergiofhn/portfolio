@@ -1,4 +1,16 @@
 # Recurring Content Automation (LinkedIn & Instagram)
+## Antes / Después
+**Antes**
+- Publicación irregular de contenido
+- Decisiones improvisadas
+- Falta de continuidad en la marca
+- Mucho esfuerzo para poco impacto
+
+**Después**
+- Calendario automatizado de publicaciones
+- Flujo recurrente y predecible
+- Menos fricción operativa
+- Contenido publicado sin intervención diaria
 
 ## Contexto
 Perfiles que requieren publicación constante en días concretos de la semana.
