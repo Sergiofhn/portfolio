@@ -1,5 +1,4 @@
 # Portfolio — Automation & Applied AI (Real Operations)
-
 Soy Sergio (Quivara). Diseño e implanto **sistemas automáticos end-to-end** para pymes y empresas de servicios.
 
 Mi foco no es la tecnología, sino el **control operativo**:
@@ -77,10 +76,10 @@ Aquí encontrarás **casos reales**, documentados, con flujos n8n, decisiones t�
   - Menos fricción operativa
   - Contenido publicado sin intervención diaria
 
-Stack habitual
+**Stack habitual**
 
-n8n · Google Workspace (Gmail/Drive/Sheets) · APIs · Webhooks · Agents (cuando aporta valor) · Docker
+n8n · Google Apps Scrips · Google Workspace (Gmail/Drive/Sheets) · APIs · Webhooks · Agents (cuando aporta valor) · Docker 
 
-Cómo trabajo
+**Cómo trabajo**
 
 Diagnóstico operativo → Diseño de sistema → Implementación fiable + documentación
