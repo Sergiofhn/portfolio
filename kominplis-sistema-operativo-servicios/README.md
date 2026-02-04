@@ -42,6 +42,7 @@ Desde el punto de vista técnico:
 - El iCal se consume como feed de eventos
 - Los eventos se normalizan y validan antes de entrar en el sistema
 - Se evita la duplicidad entre entradas manuales y automáticas
+```
 
 ## Diagrama de arquitectura
 ```mermaid
