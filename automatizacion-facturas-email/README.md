@@ -24,32 +24,29 @@ Sistema automático que:
 5. Notifica incidencias o facturas incompletas
 
 ## Diagrama de arquitectura del sistema
-´´´mermaid
-flowchart TD
-    A[Gmail<br/>Facturas entrantes] --> B[WF1 · Ingesta facturas]
+´´´flowchart TD
+A[Gmail<br/>Facturas entrantes] --> B[WF1 · Ingesta facturas]
 
-    subgraph WF1 [WF1 · Ingesta (Email → Drive temporal → Sheets)]
-        B --> C[Validación email y adjuntos]
-        C --> D[Guardar archivo en Drive temporal]
-        D --> E[Registrar fila en Google Sheets]
-        E --> F[Etiquetar y marcar email en Gmail]
-    end
+subgraph WF1 [WF1 · Ingesta (Email → Drive temporal → Sheets)]
+B --> C[Validación email y adjuntos]
+C --> D[Guardar archivo en Drive temporal]
+D --> E[Registrar fila en Google Sheets]
+E --> F[Etiquetar y marcar email en Gmail]
+end
 
-    E --> G[WF2 · Procesado y clasificación]
+E --> G[WF2 · Procesado y clasificación]
 
-    subgraph WF2 [WF2 · Procesado (OCR → Clasificación → Archivo)]
-        G --> H[OCR / Extracción de datos]
-        H --> I[Validación de datos críticos]
+subgraph WF2 [WF2 · Procesado (OCR → Clasificación → Archivo)]
+G --> H[OCR / Extracción de datos]
+H --> I[Validación de datos críticos]
+I -->|OK| J[Clasificación por Año / Proveedor / Mes]
+I -->|ERROR| K[Carpeta ERROR + registro del fallo]
+J --> L[Mover archivo a Drive definitivo]
+L --> M[Actualizar estado en Google Sheets]
+end
 
-        I -->|OK| J[Clasificación por Año / Proveedor / Mes]
-        I -->|ERROR| K[Carpeta ERROR + registro del fallo]
-
-        J --> L[Mover archivo a Drive definitivo]
-        L --> M[Actualizar estado en Google Sheets]
-    end
-
-    M --> N[Notificación por Telegram]
-    K --> N
+M --> N[Notificación por Telegram]
+K --> N
 ´´´
 
 ## Stack técnico
