@@ -23,15 +23,15 @@ Sistema automático que:
 4. Registra la información en el sistema
 5. Notifica incidencias o facturas incompletas
 
-´´´
+## Diagrama de arquitectura del sistema
 flowchart TD
     A[Gmail<br/>Facturas entrantes] --> B[WF1 · Ingesta facturas]
 
-    subgraph WF1 [WF1 · Ingesta (Email → Drive → Sheets)]
+    subgraph WF1 [WF1 · Ingesta (Email → Drive temporal → Sheets)]
         B --> C[Validación email y adjuntos]
-        C --> D[Guardar en Drive temporal]
+        C --> D[Guardar archivo en Drive temporal]
         D --> E[Registrar fila en Google Sheets]
-        E --> F[Etiquetar y marcar email]
+        E --> F[Etiquetar y marcar email en Gmail]
     end
 
     E --> G[WF2 · Procesado y clasificación]
@@ -39,15 +39,17 @@ flowchart TD
     subgraph WF2 [WF2 · Procesado (OCR → Clasificación → Archivo)]
         G --> H[OCR / Extracción de datos]
         H --> I[Validación de datos críticos]
+
         I -->|OK| J[Clasificación por Año / Proveedor / Mes]
-        I -->|ERROR| K[Carpeta ERROR + notificación]
+        I -->|ERROR| K[Carpeta ERROR + registro del fallo]
+
         J --> L[Mover archivo a Drive definitivo]
-        L --> M[Actualizar estado en Sheets]
+        L --> M[Actualizar estado en Google Sheets]
     end
 
-    M --> N[Notificación Telegram]
+    M --> N[Notificación por Telegram]
     K --> N
-´´´
+
 
 ## Stack técnico
 - n8n
