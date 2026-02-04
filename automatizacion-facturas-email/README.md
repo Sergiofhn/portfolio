@@ -23,6 +23,32 @@ Sistema automático que:
 4. Registra la información en el sistema
 5. Notifica incidencias o facturas incompletas
 
+´´´
+flowchart TD
+    A[Gmail<br/>Facturas entrantes] --> B[WF1 · Ingesta facturas]
+
+    subgraph WF1 [WF1 · Ingesta (Email → Drive → Sheets)]
+        B --> C[Validación email y adjuntos]
+        C --> D[Guardar en Drive temporal]
+        D --> E[Registrar fila en Google Sheets]
+        E --> F[Etiquetar y marcar email]
+    end
+
+    E --> G[WF2 · Procesado y clasificación]
+
+    subgraph WF2 [WF2 · Procesado (OCR → Clasificación → Archivo)]
+        G --> H[OCR / Extracción de datos]
+        H --> I[Validación de datos críticos]
+        I -->|OK| J[Clasificación por Año / Proveedor / Mes]
+        I -->|ERROR| K[Carpeta ERROR + notificación]
+        J --> L[Mover archivo a Drive definitivo]
+        L --> M[Actualizar estado en Sheets]
+    end
+
+    M --> N[Notificación Telegram]
+    K --> N
+´´´
+
 ## Stack técnico
 - n8n
 - Gmail
