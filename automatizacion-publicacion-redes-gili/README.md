@@ -1,4 +1,16 @@
 # Social Media Publishing Automation — Gili
+## Antes / Después
+**Antes**
+- Publicaciones hechas a mano
+- Falta de constancia en días y horarios
+- Olvidos frecuentes y errores humanos
+- Cero control sobre qué se ha publicado
+
+**Después**
+- Publicaciones automáticas y programadas
+- Calendario consistente y controlado
+- Estados claros por contenido
+- Notificaciones y trazabilidad completa
 
 ## Contexto
 Proyecto que requiere publicación recurrente en redes sociales sin intervención manual.
