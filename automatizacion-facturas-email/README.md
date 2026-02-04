@@ -49,8 +49,7 @@ flowchart TD
 
   M --> N["Notificacion por Telegram"]
   K --> N
-´´´
-
+```
 ## Stack técnico
 - n8n
 - Gmail
