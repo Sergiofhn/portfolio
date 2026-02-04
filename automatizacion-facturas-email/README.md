@@ -1,4 +1,16 @@
 # Invoice Processing Automation (Email → System)
+## Antes / Después
+  **Antes**
+  - Facturas recibidas por email y gestionadas manualmente
+  - Errores en importes, fechas o proveedores
+  - Dependencia total de una persona para el control
+  - Falta de visibilidad del estado de cada factura
+  
+  **Después**
+  - Facturas procesadas automáticamente desde el email
+  - Validación estructurada de datos clave
+  - Estados claros por factura (OK / ERROR)
+  - Trazabilidad completa y proceso auditable
 
 ## Contexto
 Empresa de servicios con alto volumen de facturas recibidas por email.
