@@ -23,6 +23,27 @@ Diseño e implantación de un sistema operativo automático que:
 4. Prepara la información para facturación
 5. Mantiene trazabilidad completa del proceso
 
+## Diagrama de arquitectura
+
+```text
+Cliente / Equipo operativo
+  ↓
+Google Form (entrada de solicitudes)
+  ↓
+Google Sheets (registro y estado del servicio)
+  ↓
+Apps Script (validación + normalización + reglas)
+  ↓
+n8n (orquestación: decisiones, rutas, logs)
+  ↓
+Google Calendar (planificación y ejecución)
+  ↓
+Google Sheets (Resumen / registro final trazable)
+  ↓
+Facturación (preparación de líneas por cliente / piso)
+  ↓
+Notificaciones (si hay incidencias o cambios)
+
 ## Stack técnico
 - Google Forms
 - Google Sheets
