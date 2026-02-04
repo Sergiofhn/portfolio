@@ -23,12 +23,35 @@ Diseño e implantación de un sistema operativo automático que:
 4. Prepara la información para facturación
 5. Mantiene trazabilidad completa del proceso
 
-## Diagrama de arquitectura
+```md
+## Entrada automática vía iCal (cliente)
 
+Además de la entrada manual mediante formularios, el sistema integra
+calendarios iCal proporcionados por los clientes.
+
+Esto permite:
+- Sincronizar automáticamente los servicios programados por el cliente
+- Eliminar completamente la intervención manual
+- Mantener el sistema alineado en tiempo real con el calendario externo
+
+Desde el punto de vista operativo, el iCal actúa como una fuente de verdad
+externa, asegurando que cualquier cambio realizado por el cliente se refleja
+automáticamente en el sistema interno.
+
+Desde el punto de vista técnico:
+- El iCal se consume como feed de eventos
+- Los eventos se normalizan y validan antes de entrar en el sistema
+- Se evita la duplicidad entre entradas manuales y automáticas
+
+## Diagrama de arquitectura
 ```mermaid
 flowchart TD
-    A[Cliente / Equipo operativo] --> B[Google Form<br/>Entrada de solicitudes]
+    A[Cliente / Equipo operativo] --> B[Google Form<br/>Entrada manual de solicitudes]
+    A --> B2[iCal Cliente<br/>Sincronización automática]
+
     B --> C[Google Sheets<br/>Registro y estado del servicio]
+    B2 --> C
+
     C --> D[Apps Script<br/>Validación · Normalización · Reglas]
     D --> E[n8n<br/>Orquestación · Decisiones · Logs]
     E --> F[Google Calendar<br/>Planificación y ejecución]
