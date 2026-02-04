@@ -24,6 +24,7 @@ Sistema automático que:
 5. Notifica incidencias o facturas incompletas
 
 ## Diagrama de arquitectura del sistema
+´´´mermaid
 flowchart TD
     A[Gmail<br/>Facturas entrantes] --> B[WF1 · Ingesta facturas]
 
@@ -49,7 +50,7 @@ flowchart TD
 
     M --> N[Notificación por Telegram]
     K --> N
-
+´´´
 
 ## Stack técnico
 - n8n
