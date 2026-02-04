@@ -49,7 +49,8 @@ plataformas sin duplicar lógica.
 - Orquestación robusta sin dependencia manual
 - Capacidad de escalar contenido sin aumentar carga operativa
 
-´´´
+## Diagrama de arquitectura
+```mermaid
 flowchart LR
     A[Scheduler / Trigger] --> B[Google Sheets - Datos]
     B --> C[Validación y reglas]
@@ -62,4 +63,3 @@ flowchart LR
     H --> I
     I --> J[Registro y notificación]
 ´´´
-
