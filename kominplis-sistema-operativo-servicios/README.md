@@ -43,7 +43,7 @@ Google Sheets (Resumen / registro final trazable)
 Facturación (preparación de líneas por cliente / piso)
   ↓
 Notificaciones (si hay incidencias o cambios)
-
+```
 ## Stack técnico
 - Google Forms
 - Google Sheets
