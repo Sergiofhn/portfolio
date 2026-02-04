@@ -37,8 +37,6 @@ Sistema automático que:
 El sistema se divide en workers independientes para garantizar escalabilidad, control y trazabilidad del proceso.
 
 ```mermaid
-(flowchart de arriba)
-
 flowchart TD
     A[Fuentes online<br/>Google Maps / Webs] --> B[WF1 · Worker de campañas]
 
