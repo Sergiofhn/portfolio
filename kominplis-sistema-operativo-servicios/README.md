@@ -24,7 +24,7 @@ Diseño e implantación de un sistema operativo automático que:
 5. Mantiene trazabilidad completa del proceso
 
 ```md
-## Entrada automática vía iCal (cliente)
+Entrada automática vía iCal (cliente)
 
 Además de la entrada manual mediante formularios, el sistema integra
 calendarios iCal proporcionados por los clientes.
