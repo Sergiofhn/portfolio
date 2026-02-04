@@ -66,6 +66,7 @@ flowchart TD
 - Google Calendar
 - Google Apps Script
 - n8n
+- iCal / ICS feeds
 - Automatizaciones de validación y sincronización
 
 ## Resultado
@@ -73,6 +74,7 @@ flowchart TD
 - Eliminación de errores de coordinación
 - Base sólida para facturación automática
 - Sistema escalable sin añadir personal
+- Operativa alineada en tiempo real con calendarios de cliente
 
 ## Decisiones clave
 - Separar entrada de datos, ejecución y facturación
