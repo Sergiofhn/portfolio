@@ -5,8 +5,19 @@ Soy Sergio (Quivara). Diseño e implanto sistemas automáticos para pymes: menos
 ## Proyectos (Case Studies)
 
 - **[Lead Scraping & Enrichment Automation](./lead-scraping-automatizado)**  
-  Búsqueda manual de leads → sistema automático de detección, enriquecimiento y validación.
+  Leads manuales → sistema automático de detección y enriquecimiento.
 
+- **[Invoice Processing Automation](./automatizacion-facturas-email)**  
+  Facturas por email → procesamiento automático y validado.
+
+- **[Kominplis — Operational System Automation](./kominplis-sistema-operativo-servicios)**  
+  Operativa manual → sistema centralizado y trazable.
+
+- **[Social Media Publishing Automation — Gili](./automatizacion-publicacion-redes-gili)**  
+  Publicaciones manuales → sistema automático y recurrente.
+
+- **[Recurring Content Automation](./automatizacion-contenido-recurrente)**  
+  Publicación irregular → calendario automatizado LinkedIn e Instagram.
 
 Stack habitual
 
