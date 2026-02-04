@@ -23,26 +23,26 @@ Diseño e implantación de un sistema operativo automático que:
 4. Prepara la información para facturación
 5. Mantiene trazabilidad completa del proceso
 
-```md
-Entrada automática vía iCal (cliente)
+## Diseño del sistema — Entradas
+El sistema está diseñado para aceptar **múltiples fuentes de entrada**, garantizando
+automatización completa sin perder control ni trazabilidad.
+### Entrada manual (Google Forms)
+- Utilizada por el equipo operativo cuando el cliente no dispone de integración
+- Permite registrar solicitudes puntuales o excepciones
+- Validación inmediata de datos en origen
+### Entrada automática (iCal del cliente)
+- Integración directa con calendarios iCal proporcionados por los clientes
+- Sincronización continua de servicios programados
+- Reflejo automático de altas, modificaciones y cancelaciones
 
-Además de la entrada manual mediante formularios, el sistema integra
-calendarios iCal proporcionados por los clientes.
-
-Esto permite:
-- Sincronizar automáticamente los servicios programados por el cliente
-- Eliminar completamente la intervención manual
-- Mantener el sistema alineado en tiempo real con el calendario externo
-
-Desde el punto de vista operativo, el iCal actúa como una fuente de verdad
-externa, asegurando que cualquier cambio realizado por el cliente se refleja
-automáticamente en el sistema interno.
+Desde el punto de vista operativo, el iCal actúa como una **fuente de verdad externa**,
+asegurando que cualquier cambio realizado por el cliente se propaga al sistema interno
+sin intervención manual.
 
 Desde el punto de vista técnico:
-- El iCal se consume como feed de eventos
-- Los eventos se normalizan y validan antes de entrar en el sistema
-- Se evita la duplicidad entre entradas manuales y automáticas
-```
+- Consumo del iCal como feed de eventos
+- Normalización y validación antes de persistir los datos
+- Prevención de duplicidades entre entradas manuales y automáticas
 
 ## Diagrama de arquitectura
 ```mermaid
