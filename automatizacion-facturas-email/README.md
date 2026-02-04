@@ -23,31 +23,32 @@ Sistema automático que:
 4. Registra la información en el sistema
 5. Notifica incidencias o facturas incompletas
 
-## Diagrama de arquitectura del sistema
 ```mermaid
 flowchart TD
-A[Gmail<br/>Facturas entrantes] --> B[WF1 · Ingesta facturas]
+  A["Gmail<br/>Facturas entrantes"] --> B["WF1 - Ingesta facturas"]
 
-subgraph WF1 [WF1 · Ingesta (Email → Drive temporal → Sheets)]
-B --> C[Validación email y adjuntos]
-C --> D[Guardar archivo en Drive temporal]
-D --> E[Registrar fila en Google Sheets]
-E --> F[Etiquetar y marcar email en Gmail]
-end
+  subgraph WF1["WF1 - Ingesta: Email -> Drive temporal -> Sheets"]
+    B --> C["Validacion email y adjuntos"]
+    C --> D["Guardar archivo en Drive temporal"]
+    D --> E["Registrar fila en Google Sheets"]
+    E --> F["Etiquetar y marcar email en Gmail"]
+  end
 
-E --> G[WF2 · Procesado y clasificación]
+  E --> G["WF2 - Procesado y clasificacion"]
 
-subgraph WF2 [WF2 · Procesado (OCR → Clasificación → Archivo)]
-G --> H[OCR / Extracción de datos]
-H --> I[Validación de datos críticos]
-I -->|OK| J[Clasificación por Año / Proveedor / Mes]
-I -->|ERROR| K[Carpeta ERROR + registro del fallo]
-J --> L[Mover archivo a Drive definitivo]
-L --> M[Actualizar estado en Google Sheets]
-end
+  subgraph WF2["WF2 - Procesado: OCR -> Clasificacion -> Archivo"]
+    G --> H["OCR / Extraccion de datos"]
+    H --> I["Validacion de datos criticos"]
 
-M --> N[Notificación por Telegram]
-K --> N
+    I -->|OK| J["Clasificacion por Ano / Proveedor / Mes"]
+    I -->|ERROR| K["Carpeta ERROR + registro del fallo"]
+
+    J --> L["Mover archivo a Drive definitivo"]
+    L --> M["Actualizar estado en Google Sheets"]
+  end
+
+  M --> N["Notificacion por Telegram"]
+  K --> N
 ´´´
 
 ## Stack técnico
@@ -70,18 +71,3 @@ K --> N
 - Pipeline modular: detección → extracción → validación → registro
 - Manejo de errores independiente por etapa
 - IA usada solo para extracción estructurada, no como fuente de verdad
-
-
-
-flowchart LR
-    A[Scheduler / Trigger] --> B[Google Sheets - Datos]
-    B --> C[Validación y reglas]
-    C --> D[Selección de contenido]
-    D --> E[Preparación media]
-    E --> F{Red social destino}
-    F -->|Instagram| G[Publicar Instagram]
-    F -->|TikTok| H[Publicar TikTok]
-    G --> I[Actualizar estado]
-    H --> I
-    I --> J[Registro y notificación]
-´´´
