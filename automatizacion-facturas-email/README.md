@@ -24,7 +24,8 @@ Sistema automático que:
 5. Notifica incidencias o facturas incompletas
 
 ## Diagrama de arquitectura del sistema
-´´´flowchart TD
+```mermaid
+flowchart TD
 A[Gmail<br/>Facturas entrantes] --> B[WF1 · Ingesta facturas]
 
 subgraph WF1 [WF1 · Ingesta (Email → Drive temporal → Sheets)]
@@ -70,3 +71,17 @@ K --> N
 - Manejo de errores independiente por etapa
 - IA usada solo para extracción estructurada, no como fuente de verdad
 
+
+
+flowchart LR
+    A[Scheduler / Trigger] --> B[Google Sheets - Datos]
+    B --> C[Validación y reglas]
+    C --> D[Selección de contenido]
+    D --> E[Preparación media]
+    E --> F{Red social destino}
+    F -->|Instagram| G[Publicar Instagram]
+    F -->|TikTok| H[Publicar TikTok]
+    G --> I[Actualizar estado]
+    H --> I
+    I --> J[Registro y notificación]
+´´´
