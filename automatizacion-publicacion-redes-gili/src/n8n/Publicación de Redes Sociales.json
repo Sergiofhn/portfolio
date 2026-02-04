@@ -1,0 +1,1868 @@
+{
+  "name": "Publicación de Redes Sociales",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "56f7a3b9-0347-4599-a050-59a553ec8c9e",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        -4720,
+        3776
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1930303011,
+          "mode": "list",
+          "cachedResultName": "Archivos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit#gid=1930303011"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "Listo para publicar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "93b9b84f-7de2-4d43-8b0d-a15830903528",
+      "name": "Datos Generales",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -4512,
+        3776
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Gate de publicación (media)\n * - Solo pasa items con:\n *    - Status = \"Listo para publicar\"\n *    - Fecha.Hora_key <= ahora (TZ)\n *    - Dentro de la ventana horaria\n * - Mantiene el campo \"Type\" que viene de Sheets (\"video\" | \"image\")\n */\n\nconst TZ = 'Europe/Madrid';\nconst WINDOW_START = '00:00';\nconst WINDOW_END   = '23:59';\n\n/* === Helpers === */\nfunction nowPartsTZ(tz) {\n  const fmt = new Intl.DateTimeFormat('en-CA', {\n    timeZone: tz,\n    hour12: false,\n    year: 'numeric', month: '2-digit', day: '2-digit',\n    hour: '2-digit', minute: '2-digit'\n  });\n  const parts = fmt.formatToParts(new Date());\n  const get = n => parts.find(p => p.type === n)?.value;\n  return {\n    y: get('year'),\n    m: get('month'),\n    d: get('day'),\n    H: get('hour'),\n    M: get('minute'),\n  };\n}\n\nfunction slotKeyNow(tz) {\n  const { y, m, d, H, M } = nowPartsTZ(tz);\n  return `${y}-${m}-${d} ${H}:${M}`; // YYYY-MM-DD HH:mm\n}\n\nfunction insideWindowNow(tz, start, end) {\n  const { H, M } = nowPartsTZ(tz);\n  const minsNow = parseInt(H,10)*60 + parseInt(M,10);\n  const [sH, sM] = start.split(':').map(n => parseInt(n,10));\n  const [eH, eM] = end.split(':').map(n => parseInt(n,10));\n  const minsStart = sH*60 + sM;\n  const minsEnd   = eH*60 + eM;\n  return (minsNow >= minsStart && minsNow <= minsEnd);\n}\n\nfunction readableNow(tz) {\n  return new Intl.DateTimeFormat('es-ES', {\n    timeZone: tz,\n    hour12: true,\n    day: '2-digit',\n    month: 'long',\n    hour: '2-digit',\n    minute: '2-digit'\n  }).format(new Date());\n}\n\n/**\n * Normaliza una fecha tipo:\n *   \"2025-11-17 9:45\"  -> \"2025-11-17 09:45\"\n *   \"2025-11-17 09:45\" -> \"2025-11-17 09:45\"\n */\nfunction normalizeFechaKey(raw) {\n  if (!raw) return null;\n  const str = String(raw).trim();\n\n  const m = str.match(/^(\\d{4}-\\d{2}-\\d{2})\\s+(\\d{1,2}):(\\d{2})$/);\n  if (!m) return null;\n\n  const [, datePart, hourPart, minPart] = m;\n  const hh = hourPart.padStart(2, '0');\n  return `${datePart} ${hh}:${minPart}`; // siempre YYYY-MM-DD HH:mm\n}\n\n/* === Lógica principal === */\nconst nowKey   = slotKeyNow(TZ);\nconst inWindow = insideWindowNow(TZ, WINDOW_START, WINDOW_END);\nconst readable = readableNow(TZ);\n\nconst out = [];\n\nfor (const item of items) {\n  const j = item.json;\n  const status = (j.Status || j.status || '').trim().toLowerCase();\n  const type   = (j.Type || j.type || '').trim().toLowerCase(); // \"video\" | \"image\"\n\n  const rawFechaKey = j['Fecha.Hora_key'];\n  const fechaKey    = normalizeFechaKey(rawFechaKey);\n\n  let ready = false;\n  let motivo = '';\n\n  if (status !== 'listo para publicar') {\n    motivo = 'Status distinto de \"Listo para publicar\"';\n  } else if (!fechaKey) {\n    motivo = 'Fecha.Hora_key ausente o inválida';\n  } else if (!inWindow) {\n    motivo = 'Fuera de ventana horaria';\n  } else if (fechaKey > nowKey) {\n    motivo = `Aún no toca (${fechaKey} > ${nowKey})`;\n  } else {\n    ready = true;\n    motivo = '✅ Listo para publicar ahora';\n  }\n\n  if (ready) {\n    out.push({\n      json: {\n        ...j,\n        Type: type,            // nos aseguramos de que baja en minúsculas\n        Fecha_Hora_key_norm: fechaKey,\n        slot_key: nowKey,\n        inside_window: inWindow,\n        ready_to_post: true,\n        motivo,\n        readable_time: readable,\n      }\n    });\n  }\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4304,
+        3776
+      ],
+      "id": "343fa93f-2b09-4008-8c35-92bb3648a45c",
+      "name": "Gate de publicación (media)"
+    },
+    {
+      "parameters": {
+        "chatId": "744540657",
+        "text": "={{ $json.mensaje_final }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "d72c5364-875d-44d0-b07b-1c644627612d",
+      "name": "Send a text message1",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -1168,
+        3408
+      ],
+      "webhookId": "6a86891a-9444-45ed-9ff4-b20d3fc71f58",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "eHpIsuSv3o1eKxoa",
+          "name": "Telegram StrateX_Consultant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node v4 — Codigo para identificar los datos\n// IMPORTANTE: ignoramos la entrada directa del nodo anterior\n// y usamos SIEMPRE los items del Gate + los de Datos Generales.\n\n// Helpers\nfunction toStr(x) {\n  return (x ?? '').toString().trim();\n}\n\nfunction cleanEq(x) {\n  // Quita \"=\" iniciales (por si vienen de fórmulas en Sheets)\n  return toStr(x).replace(/^=+/, '').trim();\n}\n\nfunction norm(str) {\n  // Normalización para comparar claves (cliente, etc.)\n  return cleanEq(str).toLowerCase();\n}\n\n/* === 1) Configuración por cliente desde \"Datos Generales\" === */\n\n// OJO: usa EXACTAMENTE el nombre del nodo de Google Sheets de config\nconst configItems = $items('Datos Generales'); \nconst mapConfig = {};\n\nfor (const it of configItems) {\n  const cj = it.json || {};\n  const key = norm(cj.Cliente);\n  if (!key) continue;\n  mapConfig[key] = cj;\n}\n\n/* === 2) Items de publicación desde el GATE === */\n\n// OJO: nombre EXACTO del nodo gate\nconst publishItems = $items('Gate de publicación (media)');\n\nreturn publishItems.map((it) => {\n  const j = it.json || {};\n\n  // Cliente: normalizamos y limpiamos\n  const clienteRaw  = cleanEq(j.Cliente || j.cliente || '');\n  const clienteKey  = norm(clienteRaw);\n  const cfg         = mapConfig[clienteKey] || {};\n\n  j.Cliente      = clienteRaw;\n  j.cliente_norm = clienteKey;\n\n  // Type: nos aseguramos de que baja bien en minúsculas (\"video\" | \"image\")\n  const typeRaw = cleanEq(j.Type || j.type || '');\n  j.Type        = typeRaw.toLowerCase();\n  j.type_norm   = j.Type;\n\n  // Campo técnico: perfil de UploadPost (nombre del perfil en UploadPost)\n  j.cuenta_buffer_id = cfg.cuenta_buffer_id || '';\n\n  // Cliente base y formato (por ejemplo \"Quivara_Test - reels\")\n  const parts = clienteRaw.split(' - ');\n  j.cliente_base = parts[0] || clienteRaw;\n  j.formato      = parts[1] || 'tiktok'; // por defecto tiktok\n\n  // Franja horaria (cuando la tengas en la hoja de DATOS)\n  j.franja_horaria = cfg.franja_horaria || '';\n\n  return { json: j };\n});"
+      },
+      "id": "956fbe41-f85c-44ff-bf7a-0baf95ba2b84",
+      "name": "Codigo para identificar los datos1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -3616,
+        3776
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b326a38-b17c-4ce3-aee4-acbc0ce0138e",
+              "name": "caption",
+              "value": "={{ $json.Copy }}",
+              "type": "string"
+            },
+            {
+              "id": "fe242c7c-9c63-4556-8cb2-671d40658a99",
+              "name": "video_url",
+              "value": "={{ $json[\"Video Link\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "5efc4656-cc13-46f7-a83d-e49639a41b55",
+              "name": "fileId",
+              "value": "={{ $json.fileId }}",
+              "type": "string"
+            },
+            {
+              "id": "a12a9f1c-2ddd-448a-92e5-6cec2abc6849",
+              "name": "row_number",
+              "value": "={{ $json.row_number }}",
+              "type": "string"
+            },
+            {
+              "id": "a749cafc-c62a-4a77-965c-ddc723a66410",
+              "name": "cliente",
+              "value": "={{ $json.Cliente }}",
+              "type": "string"
+            },
+            {
+              "id": "04051a59-4a43-47e0-a270-af061bb2b4f5",
+              "name": "programado_para",
+              "value": "={{ $json[\"Fecha.Hora_key\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "47e47472-5d05-4ad0-bdfc-61a060f355f2",
+              "name": "titulo_original",
+              "value": "={{ $json.Title }}",
+              "type": "string"
+            },
+            {
+              "id": "be47e40f-a3fd-4e6a-86f3-c885815d3f57",
+              "name": "timestamp_preparado",
+              "value": "=={{$now}}",
+              "type": "string"
+            },
+            {
+              "id": "87b940d6-9def-47a8-b3a3-0c70d1c11bfc",
+              "name": "Type",
+              "value": "={{ $json.Type }}",
+              "type": "string"
+            },
+            {
+              "id": "fa46f450-904b-4762-b6db-18642e4382e6",
+              "name": "buffer_id",
+              "value": "={{ $json.Buffer_ID }}",
+              "type": "string"
+            },
+            {
+              "id": "eea2b260-1f9e-4cbe-aed6-56163e9be9da",
+              "name": "network",
+              "value": "={{ $json.formato ? $json.formato : ($json.type_norm === 'reel' ? 'reels' : ($json.type_norm === 'video' ? 'tiktok' : 'generico')) }}",
+              "type": "string"
+            },
+            {
+              "id": "9c34c6f7-740b-4f3a-ac2a-969a5ad417d4",
+              "name": "client",
+              "value": "={{ $json.cliente || $json.Cliente || $json.cliente_base || $json.cliente_norm }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "493e148b-8dda-4a9d-8384-69731cfaa401",
+      "name": "Formatear los datos1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -3424,
+        3776
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Codigo para identificar los datos1').item.json.Type }}",
+                    "rightValue": "=video",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "8acdc73c-f92b-465b-9282-5031fd921705"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "624b5c0f-e995-4c07-bc99-29d0fe122c8c",
+                    "leftValue": "={{ $('Codigo para identificar los datos1').item.json.Type }}",
+                    "rightValue": "reel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "686729ac-9af3-41df-bf20-fd8aad3556b4",
+                    "leftValue": "={{ $('Codigo para identificar los datos1').item.json.Type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -2576,
+        3760
+      ],
+      "id": "a296b9b9-cfac-4d88-993c-68ffbcbc0caf",
+      "name": "Switch para encontrar la red social1"
+    },
+    {
+      "parameters": {
+        "operation": "uploadVideo",
+        "user": "__manual_user__",
+        "userManual": "={{ $('Formatear los datos1').item.json.buffer_id }}",
+        "platform": [
+          "tiktok"
+        ],
+        "title": "=     \n",
+        "video": "={{ $json.converted_url }}",
+        "scheduledDate": "="
+      },
+      "id": "c5f62254-d05a-441e-9e9c-84df47c55638",
+      "name": "Upload a video en TikTok1",
+      "type": "n8n-nodes-upload-post.uploadPost",
+      "position": [
+        -2320,
+        3472
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "uploadPostApi": {
+          "id": "PnOyl3CdbX7QThB9",
+          "name": "Upload Post account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "user": "__manual_user__",
+        "userManual": "={{ $('Formatear los datos1').item.json.buffer_id }}",
+        "platform": [
+          "instagram"
+        ],
+        "title": "=    ",
+        "photos": "={{ $('Codigo para identificar los datos1').item.json[\"Video Link\"] }}",
+        "scheduledDate": "=",
+        "instagramMediaType": "STORIES"
+      },
+      "id": "b8c83648-47d2-461e-a595-47b5c6a398d2",
+      "name": "Upload photos en intagram1",
+      "type": "n8n-nodes-upload-post.uploadPost",
+      "position": [
+        -2288,
+        4112
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "uploadPostApi": {
+          "id": "PnOyl3CdbX7QThB9",
+          "name": "Upload Post account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "uploadVideo",
+        "user": "__manual_user__",
+        "userManual": "={{ $('Formatear los datos1').item.json.buffer_id }}",
+        "platform": [
+          "instagram"
+        ],
+        "title": "=\n",
+        "video": "={{ $json.converted_url }}",
+        "scheduledDate": "=",
+        "instagramMediaType": "REELS"
+      },
+      "id": "b4b0bacf-c290-480d-a408-26d095e220c2",
+      "name": "Upload a Reels en instagram1",
+      "type": "n8n-nodes-upload-post.uploadPost",
+      "position": [
+        -2320,
+        3776
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "uploadPostApi": {
+          "id": "PnOyl3CdbX7QThB9",
+          "name": "Upload Post account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM",
+          "mode": "list",
+          "cachedResultName": "Clientes - Timming",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1930303011,
+          "mode": "list",
+          "cachedResultName": "Archivos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit#gid=1930303011"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Codigo para identificar los datos1').item.json.row_number }}",
+            "Status": "Publicado",
+            "Enlace_Post": "={{ $json.results[0].post_url }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Copy",
+              "displayName": "Copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Video Link",
+              "displayName": "Video Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora",
+              "displayName": "Fecha.Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora_key",
+              "displayName": "Fecha.Hora_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fileId",
+              "displayName": "fileId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Enlace_Post",
+              "displayName": "Enlace_Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "7c1e065d-45f8-401a-bb43-1032b5fe86e0",
+      "name": "Actualizar documento DATOS1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1616,
+        3408
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node v2 — MENSAJE OK (confirmación)\n// Fusiona:\n//  - Lo que viene del nodo de actualización de Sheets (Status, Enlace_Post, row_number)\n//  - Los datos originales de la hoja ARCHIVOS leídos por \"Datos Generales\"\n// Casamos SIEMPRE por row_number.\n\nconst NODE_ARCHIVOS = 'Datos Generales'; // nombre EXACTO del nodo que lee la hoja ARCHIVOS\n\nfunction toStr(x) { return (x ?? '').toString(); }\nfunction cleanEq(x) { return toStr(x).replace(/^=+/, '').trim(); }\n\nfunction safeNodeItems(name) {\n  try {\n    const res = $items(name);\n    return Array.isArray(res) ? res : [];\n  } catch (e) {\n    return [];\n  }\n}\n\nfunction secs(n) {\n  const v = Number(n);\n  return isFinite(v) && v > 0 ? Math.round(v * 10) / 10 : null;\n}\n\nfunction niceDate(raw) {\n  const v = cleanEq(raw);\n  if (!v) return '(sin fecha)';\n  try {\n    const d = new Date(v);\n    if (isNaN(d)) return v;\n    return new Intl.DateTimeFormat('es-ES', {\n      dateStyle: 'medium',\n      timeStyle: 'short',\n    }).format(d);\n  } catch {\n    return '(sin fecha)';\n  }\n}\n\n// Construimos mapa row_number -> fila de ARCHIVOS (Datos Generales)\nconst archivosItems = safeNodeItems(NODE_ARCHIVOS);\nconst mapArchivos = {};\nfor (const it of archivosItems) {\n  const j = it.json || {};\n  const row = j.row_number ?? j.row;\n  if (row === undefined || row === null) continue;\n  mapArchivos[String(row)] = j;\n}\n\nreturn items.map((i) => {\n  const fromSheet = i.json || {};\n  const row       = fromSheet.row_number ?? fromSheet.row;\n  const rowKey    = row !== undefined && row !== null ? String(row) : null;\n\n  const base = rowKey ? (mapArchivos[rowKey] || {}) : {};\n\n  // Fusionamos dando prioridad a lo que venga de la hoja ARCHIVOS para datos descriptivos\n  const j = { ...base, ...fromSheet };\n\n  const fila = row ?? j.row_number ?? '-';\n\n  const cliente = cleanEq(\n    j.Cliente ||\n    j.cliente ||\n    '—'\n  );\n\n  // Este nodo está en la rama de TikTok → plataforma fija\n  const plataforma = 'tiktok';\n\n  const titulo = cleanEq(\n    j.titulo_original ||\n    j.Title ||\n    j.title ||\n    j.caption ||\n    '(sin título)'\n  );\n\n  // No tenemos aún resolución/duración fiables → lo intentamos por si acaso\n  const width  = j.tiktok_width  ?? j.width  ?? null;\n  const height = j.tiktok_height ?? j.height ?? null;\n  const size   = (width && height) ? `${width}x${height}` : '(sin datos)';\n  const dur    = secs(j.tiktok_duration ?? j.duration);\n\n  const fechaRaw =\n    j['Fecha.Hora_key'] ||\n    j['Fecha.Hora'] ||\n    null;\n\n  const when = niceDate(fechaRaw);\n\n  const url =\n    fromSheet.Enlace_Post ||\n    j.tiktok_post_url ||\n    j.post_url ||\n    '';\n\n  const partes = [\n    '🧾 Resultados de publicación',\n    '',\n    `• Cliente: ${cliente}`,\n    `• Plataforma: ${plataforma}`,\n    `• Fila: ${fila}`,\n    `• Vídeo: ${titulo}`,\n    `• Resolución: ${size}`,\n    `• Duración: ${dur ? dur + 's' : '(sin datos)'}`,\n    `• Fecha/Hora: ${when}`,\n  ];\n\n  if (url) {\n    partes.push(`• Enlace: ${encodeURI(url)}`);\n  }\n\n  partes.push('', '✅ Publicado / programado correctamente');\n\n  // Guardamos también en el item\n  i.json.mensaje_final = partes.join('\\n');\n  i.json.Status        = 'OK';\n  i.json.permalink     = url || null;\n  i.json.width         = width;\n  i.json.height        = height;\n  i.json.duration_sec  = dur;\n  i.json.cliente_ok    = cliente;\n  i.json.plataforma    = plataforma;\n\n  return i;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        3408
+      ],
+      "id": "85904cf8-5ec0-4433-b7cc-7b73648ffafc",
+      "name": "Codigo para preparar mensaje de Telegram1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "64a71fc1-fd9d-4280-835a-23bbe9df69c1",
+              "leftValue": "={{ $json.results[0].success }}",
+              "rightValue": "={{ $json.results[0].success }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1936,
+        3472
+      ],
+      "id": "3a856c4a-b655-40ea-ad37-74fa73fc4674",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node (JavaScript, v2)\n// Toma la salida del nodo \"Upload a video en TikTok\" y extrae campos útiles\n// Añade: tiktok_success, tiktok_error, tiktok_width, tiktok_height, tiktok_post_url, tiktok_platform_post_id\n//        + tiktok_duration, tiktok_platform, tiktok_profile_username\n\nfunction first(x) {\n  return Array.isArray(x) && x.length ? x[0] : undefined;\n}\n\nreturn items.map((i) => {\n  const j = i.json;\n\n  // El UploadPost devuelve un objeto con \"results: [ {...} ]\"\n  const container = Array.isArray(j) ? first(j) : j;\n  const r = first(container?.results) || {};\n\n  const pm = r.prevalidation_metadata || {};\n\n  i.json.tiktok_success           = !!r.success;\n  i.json.tiktok_error             = r.error_message || '';\n  i.json.tiktok_width             = pm.width ?? null;\n  i.json.tiktok_height            = pm.height ?? null;\n  i.json.tiktok_post_url          = r.post_url ?? null;\n  i.json.tiktok_platform_post_id  = r.platform_post_id ?? null;\n\n  // NUEVO: más info para el mensaje de Telegram\n  i.json.tiktok_duration          = pm.duration ?? null;\n  i.json.tiktok_platform          = r.platform || 'tiktok';\n  i.json.tiktok_profile_username  = r.profile_username || '';\n\n  return i;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        3472
+      ],
+      "id": "bfcae928-7844-4868-95de-7825c4694045",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "chatId": "744540657",
+        "text": "={{ $json.mensaje_final }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "f1ba5792-bc78-4300-ab77-397dc2682116",
+      "name": "Send a text message48",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -1168,
+        3568
+      ],
+      "webhookId": "6a86891a-9444-45ed-9ff4-b20d3fc71f58",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "eHpIsuSv3o1eKxoa",
+          "name": "Telegram StrateX_Consultant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node v2 — MENSAJE ERROR (formato largo tipo OK)\n// Usa los datos \"aplanados\" del nodo \"Code in JavaScript4\" + lo que venga de Sheets\n\nconst NODE = 'Code in JavaScript4'; // nombre EXACTO del primer code\n\nfunction toStr(x) { \n  return (x ?? '').toString(); \n}\n\nfunction cleanEq(x) { \n  return toStr(x).replace(/^=+/, '').trim(); \n}\n\nfunction safeNodeItems(nodeName) {\n  try {\n    const res = $items(nodeName);\n    return Array.isArray(res) ? res : [];\n  } catch (e) {\n    return [];\n  }\n}\n\nfunction secs(n) {\n  const v = Number(n);\n  return isFinite(v) && v > 0 ? Math.round(v * 10) / 10 : null;\n}\n\n// Normaliza fechas que vengan con formato { \"$date\": \"...\" } o como string\nfunction normalizeDate(raw) {\n  if (!raw) return '';\n  if (typeof raw === 'object' && raw.$date) {\n    return raw.$date;\n  }\n  return raw;\n}\n\nfunction niceDate(raw) {\n  const v = cleanEq(normalizeDate(raw));\n  if (!v) return '(sin fecha)';\n  try {\n    const d = new Date(v);\n    if (isNaN(d)) return v;\n    return new Intl.DateTimeFormat('es-ES', {\n      dateStyle: 'medium',\n      timeStyle: 'short',\n    }).format(d);\n  } catch {\n    return '(sin fecha)';\n  }\n}\n\nreturn items.map((i, idx) => {\n  const fromSheet = i.json || {};\n  const arrNode   = safeNodeItems(NODE);\n  const fromCode  = arrNode[idx]?.json || {};\n\n  // Fusionamos: prioridad a lo que viene de Code (info TikTok y del vídeo),\n  // pero mantenemos row_number/Status de Sheets.\n  const j = { ...fromCode, ...fromSheet };\n\n  const fila        = j.row_number ?? j.row ?? '-';\n  const cliente     = cleanEq(j.Cliente || j.client || j.tiktok_profile_username || '—');\n  const plataforma  = cleanEq(j.tiktok_platform || 'tiktok');\n  const titulo      = cleanEq(j.Title || j.title || j.caption || '(sin título)');\n  const width       = j.tiktok_width  ?? null;\n  const height      = j.tiktok_height ?? null;\n  const size        = (width && height) ? `${width}x${height}` : '(sin datos)';\n  const dur         = secs(j.tiktok_duration);\n  const fechaRaw    = j['Fecha.Hora_key'] || j['Fecha.Hora'] || j.upload_timestamp || j.last_update;\n  const when        = niceDate(fechaRaw);\n  const url         = j.tiktok_post_url || j.post_url || '';\n\n  const motivo      = cleanEq(j.tiktok_error || j.error_message || 'Error desconocido');\n\n  const partes = [\n    '🧾 Resultados de publicación (ERROR)',\n    '',\n    `• Cliente: ${cliente}`,\n    `• Plataforma: ${plataforma}`,\n    `• Fila: ${fila}`,\n    `• Vídeo: ${titulo}`,\n    `• Resolución: ${size}`,\n    `• Duración: ${dur ? dur + 's' : '(sin datos)'}`,\n    `• Fecha/Hora: ${when}`,\n  ];\n\n  if (url) {\n    partes.push(`• Enlace: ${encodeURI(url)}`);\n  }\n\n  partes.push(`• Motivo: ${motivo}`);\n  partes.push('', '🟠 Se marcará como ERROR');\n\n  i.json.mensaje_final = partes.join('\\n');\n  i.json.Status        = 'ERROR';\n  i.json.tiktok_error  = motivo;\n  i.json.tiktok_width  = width;\n  i.json.tiktok_height = height;\n  i.json.duration_sec  = dur;\n  i.json.cliente_ok    = cliente;\n  i.json.plataforma    = plataforma;\n\n  return i;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        3568
+      ],
+      "id": "39e993f5-a011-4ef3-b79a-3cf19d929485",
+      "name": "Codigo para preparar mensaje de Telegram48"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM",
+          "mode": "list",
+          "cachedResultName": "Clientes - Timming",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1930303011,
+          "mode": "list",
+          "cachedResultName": "Archivos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit#gid=1930303011"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Codigo para identificar los datos1').item.json.row_number }}",
+            "Status": "ERROR",
+            "Enlace_Post": "={{ $json.results[0].post_url }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Copy",
+              "displayName": "Copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Video Link",
+              "displayName": "Video Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora",
+              "displayName": "Fecha.Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora_key",
+              "displayName": "Fecha.Hora_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fileId",
+              "displayName": "fileId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Enlace_Post",
+              "displayName": "Enlace_Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "74a67e60-c73f-4c5a-bcb5-f4cca40508c4",
+      "name": "Actualizar documento DATOS48",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1616,
+        3568
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM",
+          "mode": "list",
+          "cachedResultName": "00_Clientes_Timming",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1930303011,
+          "mode": "list",
+          "cachedResultName": "Archivos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit#gid=1930303011"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "Status": "En proceso"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Copy",
+              "displayName": "Copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video Link",
+              "displayName": "Video Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora",
+              "displayName": "Fecha.Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha.Hora_key",
+              "displayName": "Fecha.Hora_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fileId",
+              "displayName": "fileId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Enlace_Post",
+              "displayName": "Enlace_Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Buffer_ID",
+              "displayName": "Buffer_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Error_Type",
+              "displayName": "Error_Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -3856,
+        3536
+      ],
+      "id": "6494aaa4-54ad-4932-9653-d6492fe8415d",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// CODE — Marcar fila como \"En proceso\" y conservar todos los datos\n\nreturn items.map(item => {\n  const j = item.json || {};\n\n  // Normalizamos el número de fila por si viene con nombres distintos\n  const rowNumber =\n    j.rowNumber ??\n    j.row_number ??\n    j.row ??\n    j['Row number'] ??\n    null;\n\n  return {\n    json: {\n      ...j,\n      // Marcamos el nuevo estado\n      Status: 'En proceso',\n\n      // Aseguramos que hay un campo coherente para el nodo de Google Sheets\n      rowNumber: rowNumber,\n      row_number: rowNumber\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4080,
+        3536
+      ],
+      "id": "d546173f-5463-4ac1-a333-804a2b0d8548",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -3216,
+        3776
+      ],
+      "id": "8f721302-0a34-4e89-a793-d487d35ef710",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "rotjWHJKRYu0UQNJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://video_api:8080/convert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Access-Token",
+              "value": "47b7d23bc630eb6670482ce818ea3769ad1185b3d75e3b58"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "video_url",
+              "value": "={{$json.video_url}}"
+            },
+            {
+              "name": "client",
+              "value": "={{$json.client}}"
+            },
+            {
+              "name": "network",
+              "value": "={{$json.network}}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -3008,
+        3568
+      ],
+      "id": "a728e452-8836-4923-b0d6-be42379713e0",
+      "name": "Convertir vídeo (FFmpeg)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Limpia el binario original para ahorrar memoria y espacio en disco\nreturn $input.all().map(item => {\n  delete item.binary;\n  return item;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2800,
+        3568
+      ],
+      "id": "60b9a5f2-74f3-4419-bd7c-f1c81d4ee48a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "chatId": "744540657",
+        "text": "={{ $json.mensaje_final }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "b67859f7-bbf2-4bf3-8152-fa0488bcc7fd",
+      "name": "Send a text message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -1168,
+        3712
+      ],
+      "webhookId": "6a86891a-9444-45ed-9ff4-b20d3fc71f58",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "eHpIsuSv3o1eKxoa",
+          "name": "Telegram StrateX_Consultant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM",
+          "mode": "list",
+          "cachedResultName": "Clientes - Timming",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1930303011,
+          "mode": "list",
+          "cachedResultName": "Archivos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit#gid=1930303011"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Codigo para identificar los datos1').item.json.row_number }}",
+            "Status": "Publicado",
+            "Enlace_Post": "={{ $json.results[0].post_url }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Copy",
+              "displayName": "Copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Video Link",
+              "displayName": "Video Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora",
+              "displayName": "Fecha.Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora_key",
+              "displayName": "Fecha.Hora_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fileId",
+              "displayName": "fileId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Enlace_Post",
+              "displayName": "Enlace_Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "3437e251-7a5c-4500-8cd9-49aef2d9969e",
+      "name": "Actualizar documento DATOS",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1616,
+        3712
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node v2 — MENSAJE OK (confirmación)\n// Fusiona:\n//  - Lo que viene del nodo de actualización de Sheets (Status, Enlace_Post, row_number)\n//  - Los datos originales de la hoja ARCHIVOS leídos por \"Datos Generales\"\n// Casamos SIEMPRE por row_number.\n\nconst NODE_ARCHIVOS = 'Datos Generales'; // nombre EXACTO del nodo que lee la hoja ARCHIVOS\n\nfunction toStr(x) { return (x ?? '').toString(); }\nfunction cleanEq(x) { return toStr(x).replace(/^=+/, '').trim(); }\n\nfunction safeNodeItems(name) {\n  try {\n    const res = $items(name);\n    return Array.isArray(res) ? res : [];\n  } catch (e) {\n    return [];\n  }\n}\n\nfunction secs(n) {\n  const v = Number(n);\n  return isFinite(v) && v > 0 ? Math.round(v * 10) / 10 : null;\n}\n\nfunction niceDate(raw) {\n  const v = cleanEq(raw);\n  if (!v) return '(sin fecha)';\n  try {\n    const d = new Date(v);\n    if (isNaN(d)) return v;\n    return new Intl.DateTimeFormat('es-ES', {\n      dateStyle: 'medium',\n      timeStyle: 'short',\n    }).format(d);\n  } catch {\n    return '(sin fecha)';\n  }\n}\n\n// Construimos mapa row_number -> fila de ARCHIVOS (Datos Generales)\nconst archivosItems = safeNodeItems(NODE_ARCHIVOS);\nconst mapArchivos = {};\nfor (const it of archivosItems) {\n  const j = it.json || {};\n  const row = j.row_number ?? j.row;\n  if (row === undefined || row === null) continue;\n  mapArchivos[String(row)] = j;\n}\n\nreturn items.map((i) => {\n  const fromSheet = i.json || {};\n  const row       = fromSheet.row_number ?? fromSheet.row;\n  const rowKey    = row !== undefined && row !== null ? String(row) : null;\n\n  const base = rowKey ? (mapArchivos[rowKey] || {}) : {};\n\n  // Fusionamos dando prioridad a lo que venga de la hoja ARCHIVOS para datos descriptivos\n  const j = { ...base, ...fromSheet };\n\n  const fila = row ?? j.row_number ?? '-';\n\n  const cliente = cleanEq(\n    j.Cliente ||\n    j.cliente ||\n    '—'\n  );\n\n  // Este nodo está en la rama de TikTok → plataforma fija\n  const plataforma = 'tiktok';\n\n  const titulo = cleanEq(\n    j.titulo_original ||\n    j.Title ||\n    j.title ||\n    j.caption ||\n    '(sin título)'\n  );\n\n  // No tenemos aún resolución/duración fiables → lo intentamos por si acaso\n  const width  = j.tiktok_width  ?? j.width  ?? null;\n  const height = j.tiktok_height ?? j.height ?? null;\n  const size   = (width && height) ? `${width}x${height}` : '(sin datos)';\n  const dur    = secs(j.tiktok_duration ?? j.duration);\n\n  const fechaRaw =\n    j['Fecha.Hora_key'] ||\n    j['Fecha.Hora'] ||\n    null;\n\n  const when = niceDate(fechaRaw);\n\n  const url =\n    fromSheet.Enlace_Post ||\n    j.tiktok_post_url ||\n    j.post_url ||\n    '';\n\n  const partes = [\n    '🧾 Resultados de publicación',\n    '',\n    `• Cliente: ${cliente}`,\n    `• Plataforma: ${plataforma}`,\n    `• Fila: ${fila}`,\n    `• Vídeo: ${titulo}`,\n    `• Resolución: ${size}`,\n    `• Duración: ${dur ? dur + 's' : '(sin datos)'}`,\n    `• Fecha/Hora: ${when}`,\n  ];\n\n  if (url) {\n    partes.push(`• Enlace: ${encodeURI(url)}`);\n  }\n\n  partes.push('', '✅ Publicado / programado correctamente');\n\n  // Guardamos también en el item\n  i.json.mensaje_final = partes.join('\\n');\n  i.json.Status        = 'OK';\n  i.json.permalink     = url || null;\n  i.json.width         = width;\n  i.json.height        = height;\n  i.json.duration_sec  = dur;\n  i.json.cliente_ok    = cliente;\n  i.json.plataforma    = plataforma;\n\n  return i;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        3712
+      ],
+      "id": "4927b771-2f8d-40ad-ad98-e9328c7b0b1d",
+      "name": "Codigo para preparar mensaje de Telegram"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "64a71fc1-fd9d-4280-835a-23bbe9df69c1",
+              "leftValue": "={{ $json.results[0].success }}",
+              "rightValue": "={{ $json.results[0].success }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1936,
+        3776
+      ],
+      "id": "1fde6151-8bae-4f3f-b9ed-1ab09c3179d3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node (JavaScript, v2)\n// Toma la salida del nodo \"Upload a video en TikTok\" y extrae campos útiles\n// Añade: tiktok_success, tiktok_error, tiktok_width, tiktok_height, tiktok_post_url, tiktok_platform_post_id\n//        + tiktok_duration, tiktok_platform, tiktok_profile_username\n\nfunction first(x) {\n  return Array.isArray(x) && x.length ? x[0] : undefined;\n}\n\nreturn items.map((i) => {\n  const j = i.json;\n\n  // El UploadPost devuelve un objeto con \"results: [ {...} ]\"\n  const container = Array.isArray(j) ? first(j) : j;\n  const r = first(container?.results) || {};\n\n  const pm = r.prevalidation_metadata || {};\n\n  i.json.tiktok_success           = !!r.success;\n  i.json.tiktok_error             = r.error_message || '';\n  i.json.tiktok_width             = pm.width ?? null;\n  i.json.tiktok_height            = pm.height ?? null;\n  i.json.tiktok_post_url          = r.post_url ?? null;\n  i.json.tiktok_platform_post_id  = r.platform_post_id ?? null;\n\n  // NUEVO: más info para el mensaje de Telegram\n  i.json.tiktok_duration          = pm.duration ?? null;\n  i.json.tiktok_platform          = r.platform || 'tiktok';\n  i.json.tiktok_profile_username  = r.profile_username || '';\n\n  return i;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        3776
+      ],
+      "id": "23f54b5e-90bf-490e-8dfa-63485a91884a",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "chatId": "744540657",
+        "text": "={{ $json.mensaje_final }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "45b260e0-7cda-4d9c-bc26-25f1aaef9c7b",
+      "name": "Send a text message49",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -1168,
+        3872
+      ],
+      "webhookId": "6a86891a-9444-45ed-9ff4-b20d3fc71f58",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "eHpIsuSv3o1eKxoa",
+          "name": "Telegram StrateX_Consultant"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Code node v2 — MENSAJE ERROR (formato largo tipo OK)\n// Usa los datos \"aplanados\" del nodo \"Code in JavaScript4\" + lo que venga de Sheets\n\nconst NODE = 'Code in JavaScript4'; // nombre EXACTO del primer code\n\nfunction toStr(x) { \n  return (x ?? '').toString(); \n}\n\nfunction cleanEq(x) { \n  return toStr(x).replace(/^=+/, '').trim(); \n}\n\nfunction safeNodeItems(nodeName) {\n  try {\n    const res = $items(nodeName);\n    return Array.isArray(res) ? res : [];\n  } catch (e) {\n    return [];\n  }\n}\n\nfunction secs(n) {\n  const v = Number(n);\n  return isFinite(v) && v > 0 ? Math.round(v * 10) / 10 : null;\n}\n\n// Normaliza fechas que vengan con formato { \"$date\": \"...\" } o como string\nfunction normalizeDate(raw) {\n  if (!raw) return '';\n  if (typeof raw === 'object' && raw.$date) {\n    return raw.$date;\n  }\n  return raw;\n}\n\nfunction niceDate(raw) {\n  const v = cleanEq(normalizeDate(raw));\n  if (!v) return '(sin fecha)';\n  try {\n    const d = new Date(v);\n    if (isNaN(d)) return v;\n    return new Intl.DateTimeFormat('es-ES', {\n      dateStyle: 'medium',\n      timeStyle: 'short',\n    }).format(d);\n  } catch {\n    return '(sin fecha)';\n  }\n}\n\nreturn items.map((i, idx) => {\n  const fromSheet = i.json || {};\n  const arrNode   = safeNodeItems(NODE);\n  const fromCode  = arrNode[idx]?.json || {};\n\n  // Fusionamos: prioridad a lo que viene de Code (info TikTok y del vídeo),\n  // pero mantenemos row_number/Status de Sheets.\n  const j = { ...fromCode, ...fromSheet };\n\n  const fila        = j.row_number ?? j.row ?? '-';\n  const cliente     = cleanEq(j.Cliente || j.client || j.tiktok_profile_username || '—');\n  const plataforma  = cleanEq(j.tiktok_platform || 'tiktok');\n  const titulo      = cleanEq(j.Title || j.title || j.caption || '(sin título)');\n  const width       = j.tiktok_width  ?? null;\n  const height      = j.tiktok_height ?? null;\n  const size        = (width && height) ? `${width}x${height}` : '(sin datos)';\n  const dur         = secs(j.tiktok_duration);\n  const fechaRaw    = j['Fecha.Hora_key'] || j['Fecha.Hora'] || j.upload_timestamp || j.last_update;\n  const when        = niceDate(fechaRaw);\n  const url         = j.tiktok_post_url || j.post_url || '';\n\n  const motivo      = cleanEq(j.tiktok_error || j.error_message || 'Error desconocido');\n\n  const partes = [\n    '🧾 Resultados de publicación (ERROR)',\n    '',\n    `• Cliente: ${cliente}`,\n    `• Plataforma: ${plataforma}`,\n    `• Fila: ${fila}`,\n    `• Vídeo: ${titulo}`,\n    `• Resolución: ${size}`,\n    `• Duración: ${dur ? dur + 's' : '(sin datos)'}`,\n    `• Fecha/Hora: ${when}`,\n  ];\n\n  if (url) {\n    partes.push(`• Enlace: ${encodeURI(url)}`);\n  }\n\n  partes.push(`• Motivo: ${motivo}`);\n  partes.push('', '🟠 Se marcará como ERROR');\n\n  i.json.mensaje_final = partes.join('\\n');\n  i.json.Status        = 'ERROR';\n  i.json.tiktok_error  = motivo;\n  i.json.tiktok_width  = width;\n  i.json.tiktok_height = height;\n  i.json.duration_sec  = dur;\n  i.json.cliente_ok    = cliente;\n  i.json.plataforma    = plataforma;\n\n  return i;\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1392,
+        3872
+      ],
+      "id": "9932c45a-1177-4890-90fd-547e512afd8c",
+      "name": "Codigo para preparar mensaje de Telegram49"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM",
+          "mode": "list",
+          "cachedResultName": "Clientes - Timming",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1930303011,
+          "mode": "list",
+          "cachedResultName": "Archivos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gZvFfuPGyi6PGXxnurUZ4ynHKgaa9hvRMgzU5H_D6CM/edit#gid=1930303011"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Codigo para identificar los datos1').item.json.row_number }}",
+            "Status": "ERROR",
+            "Enlace_Post": "={{ $json.results[0].post_url }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Copy",
+              "displayName": "Copy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Video Link",
+              "displayName": "Video Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora",
+              "displayName": "Fecha.Hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha.Hora_key",
+              "displayName": "Fecha.Hora_key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cliente",
+              "displayName": "Cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fileId",
+              "displayName": "fileId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Type",
+              "displayName": "Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Enlace_Post",
+              "displayName": "Enlace_Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "723cc128-3b50-45bf-94ff-8a6e48547c9b",
+      "name": "Actualizar documento DATOS49",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1616,
+        3872
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-11-16T05:30:34.007-05:00",
+          "Readable date": "November 16th 2025, 5:30:34 am",
+          "Readable time": "5:30:34 am",
+          "Day of week": "Sunday",
+          "Year": "2025",
+          "Month": "November",
+          "Day of month": "16",
+          "Hour": "05",
+          "Minute": "30",
+          "Second": "34",
+          "Timezone": "America/New_York (UTC-05:00)"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Datos Generales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datos Generales": {
+      "main": [
+        [
+          {
+            "node": "Gate de publicación (media)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate de publicación (media)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Codigo para identificar los datos1": {
+      "main": [
+        [
+          {
+            "node": "Formatear los datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear los datos1": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch para encontrar la red social1": {
+      "main": [
+        [
+          {
+            "node": "Upload a video en TikTok1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload a Reels en instagram1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Upload photos en intagram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video en TikTok1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload photos en intagram1": {
+      "main": [
+        []
+      ]
+    },
+    "Upload a Reels en instagram1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar documento DATOS1": {
+      "main": [
+        [
+          {
+            "node": "Codigo para preparar mensaje de Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Codigo para preparar mensaje de Telegram1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Actualizar documento DATOS1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Actualizar documento DATOS48",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Codigo para preparar mensaje de Telegram48": {
+      "main": [
+        [
+          {
+            "node": "Send a text message48",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar documento DATOS48": {
+      "main": [
+        [
+          {
+            "node": "Codigo para preparar mensaje de Telegram48",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Codigo para identificar los datos1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Convertir vídeo (FFmpeg)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convertir vídeo (FFmpeg)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Switch para encontrar la red social1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar documento DATOS": {
+      "main": [
+        [
+          {
+            "node": "Codigo para preparar mensaje de Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Codigo para preparar mensaje de Telegram": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Actualizar documento DATOS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Actualizar documento DATOS49",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Codigo para preparar mensaje de Telegram49": {
+      "main": [
+        [
+          {
+            "node": "Send a text message49",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar documento DATOS49": {
+      "main": [
+        [
+          {
+            "node": "Codigo para preparar mensaje de Telegram49",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "501a56d5-543e-4120-8dd1-d97ca0d68b90",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0"
+  },
+  "id": "ruxlXzhxEZ98YfTu",
+  "tags": [
+    {
+      "updatedAt": "2025-10-21T13:53:49.588Z",
+      "createdAt": "2025-10-21T13:53:49.588Z",
+      "id": "DFhCyc4CvxkPnxeq",
+      "name": "Tiktok"
+    },
+    {
+      "updatedAt": "2025-10-21T13:53:47.362Z",
+      "createdAt": "2025-10-21T13:53:47.362Z",
+      "id": "IwAS4sp3i8ZvD7BM",
+      "name": "Instagram"
+    },
+    {
+      "updatedAt": "2025-10-15T11:58:04.388Z",
+      "createdAt": "2025-10-15T11:58:04.388Z",
+      "id": "P2E7KlVMGLucIyx2",
+      "name": "Creador de contenido"
+    },
+    {
+      "updatedAt": "2025-10-15T11:58:07.444Z",
+      "createdAt": "2025-10-15T11:58:07.444Z",
+      "id": "VyuN71mPakfJxnF9",
+      "name": "redes sociales"
+    },
+    {
+      "updatedAt": "2025-10-21T13:53:45.099Z",
+      "createdAt": "2025-10-21T13:53:45.099Z",
+      "id": "qGJznq1u0Gti0T8j",
+      "name": "Publicación"
+    }
+  ]
+}
