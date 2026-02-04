@@ -1,0 +1,500 @@
+{
+  "name": "WF0 - Alta campañas (Form -> CAMPANAS)",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 414569310,
+          "mode": "list",
+          "cachedResultName": "Form_Responses",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg/edit#gid=414569310"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9338bc21-5b4d-4732-b1d4-eb0243ed4730",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "5P8G5pIiTonayDtI",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "76f0100b-c6cc-4461-bde1-fcf937b56713",
+              "name": "form_timestamp",
+              "value": "={{ $json[\"Marca temporal\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "dfce2fe8-870c-40c6-835b-08c772dab00b",
+              "name": "id_campana",
+              "value": "=={{ $now.toMillis() + '-' + Math.floor(Math.random()*1e9) }}",
+              "type": "string"
+            },
+            {
+              "id": "6ad9ef87-fc63-47a1-b0ac-0404793f61e5",
+              "name": "sector",
+              "value": "={{ $json[\"Sector \"] }}",
+              "type": "string"
+            },
+            {
+              "id": "982e80b7-2453-4d5f-978c-b1d0f7bf0fd4",
+              "name": "ciudad",
+              "value": "={{ $json[\"  Ciudad   \"] }}",
+              "type": "string"
+            },
+            {
+              "id": "982ee6b7-eb50-4654-a111-5b2a24467731",
+              "name": "notas",
+              "value": "={{ $json[\"  Notas / Matices  \"] }}",
+              "type": "string"
+            },
+            {
+              "id": "4f1f34ba-323d-4214-921a-82ed90d99e65",
+              "name": "fecha_creacion",
+              "value": "={{ $now.setZone('Europe/Madrid').toFormat('dd/MM/yyyy - HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "0ffc9472-7332-4c53-aa07-48ca6fb247bd",
+              "name": "fecha_inicio",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "a4b6dd07-6b20-46a8-9642-452258fb343d",
+              "name": "fecha_fin",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "cd103fda-88b8-4b33-88ea-2b6525993fa7",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "42136834-ba12-4e55-ad35-9d4a2f197ddc",
+      "name": "Set (normalizar y preparar campos)"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1416690738,
+          "mode": "list",
+          "cachedResultName": "CAMPANAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg/edit#gid=1416690738"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_campana": "={{ $('Set (normalizar y preparar campos)').item.json.id_campana }}",
+            "sector": "={{ $('Set (normalizar y preparar campos)').item.json.sector }}",
+            "ciudad": "={{ $('Set (normalizar y preparar campos)').item.json.ciudad }}",
+            "notas": "={{ $('Set (normalizar y preparar campos)').item.json.notas }}",
+            "fecha_creacion": "={{ $('Set (normalizar y preparar campos)').item.json.fecha_creacion }}",
+            "fecha_inicio": "=",
+            "fecha_fin": "=",
+            "error": "=",
+            "form_timestamp": "={{ $('Set (normalizar y preparar campos)').item.json.form_timestamp }}",
+            "Estado": "Sin Procesar"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "form_timestamp",
+              "displayName": "form_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id_campana",
+              "displayName": "id_campana",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sector",
+              "displayName": "sector",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ciudad",
+              "displayName": "ciudad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notas",
+              "displayName": "notas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha_creacion",
+              "displayName": "fecha_creacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_inicio",
+              "displayName": "fecha_inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_fin",
+              "displayName": "fecha_fin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "worker_id",
+              "displayName": "worker_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lock_ts",
+              "displayName": "lock_ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resultados",
+              "displayName": "resultados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        -96
+      ],
+      "id": "c55f5429-e2e7-4960-b1a8-bfcde03c6d0d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1416690738,
+          "mode": "list",
+          "cachedResultName": "CAMPANAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg/edit#gid=1416690738"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "form_timestamp",
+              "lookupValue": "={{$json.form_timestamp}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        0
+      ],
+      "id": "50310d37-3cef-4cce-893f-b7df1f5f621e",
+      "name": "GS - Buscar duplicado",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "116553f3-f246-4ffd-81b2-8ef843608599",
+              "leftValue": "={{ $json.duplicado }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "0a2f37e3-391a-4b14-8579-c55d2b63fb72",
+      "name": "IF - No duplicado"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Deja solo el último item (la última fila del Form)\n// Si el trigger devuelve varias filas, nos quedamos con la más reciente.\n\nconst items = $input.all();\nif (!items.length) return [];\n\nreturn [items[items.length - 1]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1541175b-08ca-4ed7-9c47-4701ac526fd1",
+      "name": "CODE - Quedarse con la última respuesta"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7afbc308-b0c4-4fc1-9b4a-2e4ecc77700d",
+              "name": "duplicado",
+              "value": "={{ !!$json.row_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "eb8dde8d-7813-4db6-9345-5b28387b8e8f",
+      "name": "Set - flag duplicado"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "CODE - Quedarse con la última respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set (normalizar y preparar campos)": {
+      "main": [
+        [
+          {
+            "node": "GS - Buscar duplicado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GS - Buscar duplicado": {
+      "main": [
+        [
+          {
+            "node": "Set - flag duplicado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - No duplicado": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE - Quedarse con la última respuesta": {
+      "main": [
+        [
+          {
+            "node": "Set (normalizar y preparar campos)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - flag duplicado": {
+      "main": [
+        [
+          {
+            "node": "IF - No duplicado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "3c5516c1-dbcb-4c2d-8942-82819d84c137",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0"
+  },
+  "id": "dSbC29zLJW5KsJQypiU2I",
+  "tags": []
+}

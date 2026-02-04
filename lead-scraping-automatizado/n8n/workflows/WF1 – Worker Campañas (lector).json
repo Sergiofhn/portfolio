@@ -1,0 +1,1109 @@
+{
+  "name": "WF1 – Worker Campañas (lector)",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0c892e7-3f34-428c-afee-60df996b500c",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "schema",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "ee97ab7a-9921-4c3b-95dd-2ede83a31a25",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "google",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "6326ca6f-8dc1-4ef4-8325-31100e23f0db",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "gstatic",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "6659d028-9d54-4fac-8f53-930c3c832680",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "whatsapp",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "7edbb875-1e2b-470a-8092-8c70f344232f",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "wa.link",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "1aafcb3c-5a40-4483-9dfc-a5c944938457",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "facebook",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "f486bcab-39f1-4726-a0c3-2c1afd5498ec",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "wa.me",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "18bdea02-0121-4887-996a-7b4c5c5dfc45",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "instagram",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "new-twitter",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "twitter",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "new-linkedin",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "linkedin",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "new-youtube",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "youtube",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -1568,
+        1184
+      ],
+      "id": "bda31039-fd2a-4fbb-b8b5-555fc78dd411",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1840,
+        1168
+      ],
+      "id": "3cd263ed-c56c-48ed-864a-ecb3889c7d4e",
+      "name": "Loop Over Items",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "amount": 0.5
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -544,
+        1184
+      ],
+      "id": "137b8eb7-2432-472c-b651-5082aef5d72c",
+      "name": "Wait",
+      "webhookId": "063e5eaa-aa5f-4636-912c-ce0b7378b1bb"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42862ea8-a8c9-4f54-9dbd-898e9f4fe8a9",
+              "name": "maps_url",
+              "value": "=https://www.google.com/maps/search/{{ encodeURIComponent($json.niche + ' ' + $json.city) }}?hl=es&gl=es&region=es",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -416,
+        944
+      ],
+      "id": "d8313410-78a7-4906-8f99-6b836d2b68da",
+      "name": "Construir URL"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2144,
+        944
+      ],
+      "id": "1afb48fd-99e9-4a9b-9301-e52e905b263f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5 Turbo"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Genera UNA frase corta: \"Búscame {{ $('Leer CAMPANAS').item.json.sector }} en {{ $('Leer CAMPANAS').item.json.ciudad }}\"\n\nDatos de esta campaña (obligatorio usarlo):\n- Negocio (sector): {{ $('Leer CAMPANAS').item.json.sector }}\n- Ciudad/Provincia: {{ $('Leer CAMPANAS').item.json.ciudad }}\n- Notas/matices: {{ $('Leer CAMPANAS').item.json.notas }}\n\nReglas:\n- Solo UNA frase\n- Usa EXACTAMENTE el negocio del sector, pero puedes ajustar a plural si suena mejor (ej: \"abogados\" si sector es \"abogado\")\n- Usa EXACTAMENTE la ciudad/provincia indicada\n- Si hay notas, intégralas de forma natural en la frase (ej: \"penalistas\", \"24 horas\", \"urgencias\", etc.)\n- Sin explicaciones\n- Sin comillas\n- Sin saltos de línea\n\nEjemplo (solo para entender formato): Búscame dentistas en Málaga."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1296,
+        944
+      ],
+      "id": "e55bd915-88fd-4e31-bb63-e9a18f50e836",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "1PJRh8DDSCUM8fTl",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Información",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Correo": "={{ $json.email }}",
+            "Estado": "Sin enviar",
+            "id_campana": "={{ $('Leer CAMPANAS').item.json.id_campana }}",
+            "Web": "={{ $('Deduplicar URLs').item.json.websiteUri }}"
+          },
+          "matchingColumns": [
+            "id_campana"
+          ],
+          "schema": [
+            {
+              "id": "id_campana",
+              "displayName": "id_campana",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Web",
+              "displayName": "Web",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Correo",
+              "displayName": "Correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Correo Icebreaker",
+              "displayName": "Correo Icebreaker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        1312
+      ],
+      "id": "5837f891-3213-4ce7-88c7-82b512c5ac6a",
+      "name": "Google Sheets2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const normalize = (str) =>\n  str.normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\").toLowerCase().trim();\n\nconst originalText = $json.text || '';\nconst text = normalize(originalText);\n\n// Verbos aceptados + captura robusta: [nicho] en [ciudad] (y puede continuar con \"para...\")\nconst regex = /\\b(?:buscame|búscame|busca|buscar|encuentra|quiero|necesito|hay)\\s+(.*?)\\s+en\\s+([a-záéíóúüñ\\s'-]+?)(?=\\s+(?:para|con|de)\\b|[.,]|$)/i;\n\nconst match = text.match(regex);\n\nif (match && match[1] && match[2]) {\n  const niche = match[1].trim();\n  const city = match[2].trim();\n  return [\n    {\n      json: {\n        niche,\n        city,\n        original: originalText\n      }\n    }\n  ];\n} else {\n  return [\n    {\n      json: {\n        error: \"❌ No se pudo extraer el nicho y la ciudad.\",\n        original: originalText\n      }\n    }\n  ];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        944
+      ],
+      "id": "18d18b49-10b0-4bef-8804-7e28749ad111",
+      "name": "Diferenciar nicho de ciudad"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42862ea8-a8c9-4f54-9dbd-898e9f4fe8a9",
+              "name": "text",
+              "value": "={{ $json.chatInput || $json.message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -960,
+        944
+      ],
+      "id": "84dadcbd-4687-4cc5-b64b-34474266eff2",
+      "name": "Mapeo de texto"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.websiteUri }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 3
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        1184
+      ],
+      "id": "aa2bf71f-d307-4d3e-aead-46e19d36b9a8",
+      "name": "Scrapeo de páginas",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = ($input.first().json.data || '').toString();\n\n// Regex mejorada para emails\nconst regex = /\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/gi;\nconst matches = input.match(regex) || [];\n\n// Prefijos genéricos a excluir (ampliado)\nconst filtrosBloqueo = [\n  'info', 'contact', 'admin', 'support', 'noreply', 'no-reply',\n  'ventas', 'marketing', 'hello', 'service', 'help', 'mail', \n  'email', 'contacto', 'reservas', 'hola', 'webmaster', 'root',\n  'postmaster', 'hostmaster', 'abuse', 'newsletter', 'suscribe'\n];\n\n// Dominios técnicos/falsos a excluir\nconst dominiosBloqueo = [\n  'example.com', 'test.com', 'domain.com', 'email.com',\n  'sentry.io', 'wixpress.com', 'mailchimp.com', 'sendgrid.net'\n];\n\n// Extensiones de archivo (falsos positivos)\nconst extensionesBloqueo = ['.jpg', '.png', '.gif', '.webp', '.svg', '.css', '.js'];\n\n// Filtrar emails\nconst emails = matches.filter(email => {\n  const lower = email.toLowerCase();\n  const user = lower.split('@')[0];\n  const domain = lower.split('@')[1];\n  \n  // Excluir prefijos genéricos\n  if (filtrosBloqueo.some(b => user.includes(b))) return false;\n  \n  // Excluir dominios técnicos\n  if (dominiosBloqueo.some(d => domain.includes(d))) return false;\n  \n  // Excluir extensiones de archivo\n  if (extensionesBloqueo.some(ext => lower.includes(ext))) return false;\n  \n  // Excluir emails con caracteres extraños seguidos\n  if (/[._-]{2,}/.test(user)) return false;\n  \n  return true;\n});\n\n// Eliminar duplicados\nconst uniqueEmails = [...new Set(emails)];\n\nif (uniqueEmails.length === 0) {\n  return [{ json: { email: '' } }];\n}\n\nreturn uniqueEmails.map(email => ({ json: { email: email.toLowerCase() } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        1184
+      ],
+      "id": "5317d002-e673-4e99-8177-6ea12dfac97a",
+      "name": "Extraer emails",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        48,
+        1168
+      ],
+      "id": "884814d3-65ed-4985-bf22-ec687fa65c9d",
+      "name": "Borrar duplicados1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-Api-Key",
+              "value": "AIzaSyBGSH1hQLbyKEpbq1nK55qyltOww3ONNPs"
+            },
+            {
+              "name": "X-Goog-FieldMask",
+              "value": "places.id,places.displayName,places.formattedAddress,places.websiteUri"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"textQuery\": \"{{ $('Diferenciar nicho de ciudad').item.json.niche }} en {{ $('Diferenciar nicho de ciudad').item.json.city }}\",\n  \"pageSize\": 20,\n  \"languageCode\": \"es\",\n  \"regionCode\": \"ES\"\n}",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 2
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -144,
+        944
+      ],
+      "id": "d32ba375-46de-4da5-9fdd-37ec08caf4bf",
+      "name": "Scrapeo Google Maps1",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.places",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        1168
+      ],
+      "id": "58dfa157-651e-4a5f-b74b-84c8a554dd52",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Limpia URLs removiendo www. y normalizando\nconst items = $input.all();\n\nreturn items.map(item => {\n  const original = item.json.websiteUri || '';\n  const cleaned = original.replace(/^https?:\\/\\/(www\\.)?/i, 'https://');\n  return {\n    json: {\n      ...item.json,\n      websiteUri: cleaned\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        1184
+      ],
+      "id": "7c128d09-725d-4113-b859-9c160f89520a",
+      "name": "Limpiamos web"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "671ac39a-b1fe-40ae-b7cb-8e0cdbdceea7",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "valid-email-format",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -160,
+        1184
+      ],
+      "id": "f87bf3ad-717d-488c-b400-57faca52c827",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1008,
+        1184
+      ],
+      "id": "5319ea2a-00d5-4f8e-b33d-8003f6198a9c",
+      "name": "Wait1",
+      "webhookId": "bb348ef4-dc0a-4377-9661-a64ca995804c"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "websiteUri",
+        "options": {}
+      },
+      "id": "a56133a9-43fe-42ee-bf51-bddcf10dc7cb",
+      "name": "Deduplicar URLs",
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        1184
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        768
+      ],
+      "id": "ee2a02a7-2b50-4afc-a56f-ce15a545b026",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Elegir 1 campaña (la más antigua por fecha_creacion). Si no hay, no devuelve nada.\nconst rows = items.map(i => i.json);\n\nif (!rows.length) return [];\n\nrows.sort((a, b) => {\n  const da = new Date(a.fecha_creacion || 0).getTime();\n  const db = new Date(b.fecha_creacion || 0).getTime();\n  return da - db;\n});\n\nreturn [{ json: rows[0] }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        944
+      ],
+      "id": "3b45d5ef-4608-4e07-b215-c493ce5264d9",
+      "name": "CODE – Elegir 1 campaña (FIFO)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1416690738,
+          "mode": "list",
+          "cachedResultName": "CAMPANAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg/edit#gid=1416690738"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.row_number }}",
+            "fecha_inicio": "={{ new Date().toISOString() }}",
+            "worker_id": "={{ 'wf1-' + $execution.id }}",
+            "lock_ts": "={{ new Date().toISOString() }}",
+            "attempts": "={{ ($json.attempts ? parseInt($json.attempts,10) : 0) + 1 }}",
+            "Estado": "Procesando"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "form_timestamp",
+              "displayName": "form_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id_campana",
+              "displayName": "id_campana",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sector",
+              "displayName": "sector",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ciudad",
+              "displayName": "ciudad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "notas",
+              "displayName": "notas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fecha_creacion",
+              "displayName": "fecha_creacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_inicio",
+              "displayName": "fecha_inicio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_fin",
+              "displayName": "fecha_fin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error",
+              "displayName": "error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "worker_id",
+              "displayName": "worker_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lock_ts",
+              "displayName": "lock_ts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "attempts",
+              "displayName": "attempts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_run_at",
+              "displayName": "next_run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resultados",
+              "displayName": "resultados",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1520,
+        944
+      ],
+      "id": "2af1b8a6-3b9f-4426-9aa1-e4b10332101c",
+      "name": "Actualizar esa fila a “procesando”",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1416690738,
+          "mode": "list",
+          "cachedResultName": "CAMPANAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1a06lyeINyH21tN2KLRQDPeiqL6DfdWzSYaD3a2TmMNg/edit#gid=1416690738"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Estado",
+              "lookupValue": "Sin Procesar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1936,
+        944
+      ],
+      "id": "0d6988a4-439b-4663-b5cb-2ddc1e3c4d04",
+      "name": "Leer CAMPANAS",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "VlWfb7wujE6PcHFf",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-01-25T18:01:09.251+01:00",
+          "Readable date": "January 25th 2026, 6:01:09 pm",
+          "Readable time": "6:01:09 pm",
+          "Day of week": "Sunday",
+          "Year": "2026",
+          "Month": "January",
+          "Day of month": "25",
+          "Hour": "18",
+          "Minute": "01",
+          "Second": "09",
+          "Timezone": "Europe/Madrid (UTC+01:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Limpiamos web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Extraer emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL": {
+      "main": [
+        [
+          {
+            "node": "Scrapeo Google Maps1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Leer CAMPANAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Mapeo de texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Diferenciar nicho de ciudad": {
+      "main": [
+        [
+          {
+            "node": "Construir URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo de texto": {
+      "main": [
+        [
+          {
+            "node": "Diferenciar nicho de ciudad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrapeo de páginas": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer emails": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Borrar duplicados1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrapeo Google Maps1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Borrar duplicados1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Scrapeo de páginas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiamos web": {
+      "main": [
+        [
+          {
+            "node": "Deduplicar URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deduplicar URLs": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Leer CAMPANAS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CODE – Elegir 1 campaña (FIFO)": {
+      "main": [
+        [
+          {
+            "node": "Actualizar esa fila a “procesando”",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar esa fila a “procesando”": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer CAMPANAS": {
+      "main": [
+        [
+          {
+            "node": "CODE – Elegir 1 campaña (FIFO)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "5eff32e7-7226-4012-95b6-590ae89c84cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b3a8e0e1f9ab1bfe3a36f231f676f78bb30a519d2b21e6c530c0eee8ebb4a5d0"
+  },
+  "id": "SWvAuFPc_NjtD88n_7aW7",
+  "tags": []
+}
