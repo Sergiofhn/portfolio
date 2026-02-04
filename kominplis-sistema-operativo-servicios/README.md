@@ -25,24 +25,16 @@ Diseño e implantación de un sistema operativo automático que:
 
 ## Diagrama de arquitectura
 
-```text
-Cliente / Equipo operativo
-  ↓
-Google Form (entrada de solicitudes)
-  ↓
-Google Sheets (registro y estado del servicio)
-  ↓
-Apps Script (validación + normalización + reglas)
-  ↓
-n8n (orquestación: decisiones, rutas, logs)
-  ↓
-Google Calendar (planificación y ejecución)
-  ↓
-Google Sheets (Resumen / registro final trazable)
-  ↓
-Facturación (preparación de líneas por cliente / piso)
-  ↓
-Notificaciones (si hay incidencias o cambios)
+```mermaid
+flowchart TD
+    A[Cliente / Equipo operativo] --> B[Google Form<br/>Entrada de solicitudes]
+    B --> C[Google Sheets<br/>Registro y estado del servicio]
+    C --> D[Apps Script<br/>Validación · Normalización · Reglas]
+    D --> E[n8n<br/>Orquestación · Decisiones · Logs]
+    E --> F[Google Calendar<br/>Planificación y ejecución]
+    F --> G[Google Sheets<br/>Resumen / registro final trazable]
+    G --> H[Facturación<br/>Preparación de líneas por cliente / piso]
+    H --> I[Notificaciones<br/>Incidencias o cambios]
 ```
 ## Stack técnico
 - Google Forms
