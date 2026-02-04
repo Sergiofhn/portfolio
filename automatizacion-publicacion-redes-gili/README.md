@@ -62,4 +62,4 @@ flowchart LR
     G --> I[Actualizar estado]
     H --> I
     I --> J[Registro y notificación]
-´´´
+```
