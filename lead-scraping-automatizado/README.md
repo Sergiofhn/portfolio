@@ -1,4 +1,16 @@
 # Lead Scraping & Enrichment Automation
+## Antes / Después
+**Antes**
+- Búsqueda manual de leads en Google y directorios
+- Información incompleta o desactualizada
+- Mucho tiempo invertido para pocos resultados
+- Proceso imposible de escalar
+
+**Después**
+- Detección automática de oportunidades
+- Enriquecimiento y normalización de datos
+- Base de leads consistente y reutilizable
+- Sistema escalable y reproducible
 
 ## Contexto
 Consultoría B2B que necesita generar leads de forma recurrente sin trabajo manual.
