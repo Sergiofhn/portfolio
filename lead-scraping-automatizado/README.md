@@ -30,3 +30,36 @@ Sistema automático que:
 ## Decisiones clave
 - Separar scraping, validación y almacenamiento para evitar errores en cascada
 - Usar IA solo para clasificación, no para scraping
+
+
+## Diagrama de arquitectura
+
+El sistema se divide en workers independientes para garantizar escalabilidad, control y trazabilidad del proceso.
+
+```mermaid
+(flowchart de arriba)
+
+flowchart TD
+    A[Fuentes online<br/>Google Maps / Webs] --> B[WF1 · Worker de campañas]
+
+    subgraph WF1 [WF1 · Scraping y extracción]
+        B --> C[Construcción de query]
+        C --> D[Scraping Google Maps]
+        D --> E[Limpieza y deduplicado de URLs]
+        E --> F[Scraping web de cada empresa]
+        F --> G[Extracción de emails]
+        G --> H[Validación y filtrado]
+    end
+
+    H --> I[Google Sheets · Base de leads]
+
+    I --> J[WF2 · Enriquecimiento]
+
+    subgraph WF2 [WF2 · Enriquecimiento e IA]
+        J --> K[Clasificación y normalización]
+        K --> L[Generación de icebreaker]
+        L --> M[Actualizar lead en Sheets]
+    end
+
+    M --> N[Notificación / Uso comercial]
+```
