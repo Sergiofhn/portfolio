@@ -1,4 +1,16 @@
 # Kominplis — Operational System Automation
+## Antes / Después
+**Antes**
+- Operativa repartida entre personas y herramientas
+- Información duplicada o perdida
+- Dependencia de conocimiento no documentado
+- Dificultad para escalar sin caos
+
+**Después**
+- Sistema operativo centralizado
+- Procesos claros y documentados
+- Datos trazables de principio a fin
+- Menor dependencia de personas clave
 
 ## Contexto
 Empresa de servicios de limpieza con alta recurrencia, múltiples clientes y coordinación diaria de operaciones.
